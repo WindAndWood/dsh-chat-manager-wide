@@ -35,8 +35,19 @@ the official workspace client, so it no longer drifts with upstream UI changes.
   "system-injected runtime context" card instead of being presented as a user turn.
 * Assistant prose renders through the official `ui-primitives` `MarkdownText`; authored user text stays
   literal, so a user's own asterisks and underscores are never reinterpreted as Markdown.
+* A `user/message` event carries **both** the human prompt and synthetic `agent.inject()` contexts
+  (`source.kind` distinguishes them, per `dsh-session`'s own `SessionEventMap`). The reader now reports the
+  source kind, and the client stops presenting an injection as the user's own turn: it gets a
+  "system-injected" label instead of "Me".
+* Workspace-instruction snapshots (`source.kind === 'agent-instructions'`, which carries the reconciled file
+  list) are parsed into an intro, one entry per file and the verbatim original. Each file's Markdown now
+  **renders as Markdown** instead of showing raw source, with the file list and its set/replace/remove
+  action beside it; the untouched `<system-reminder>` framing stays one click away under "verbatim injected
+  text" so the transcript never misreports what the model read.
+* Any other synthetic `user/message` (skill content, file-change notices, …) also renders as Markdown,
+  because it is not the user's own prose. Authored prompts keep their literal rendering.
 * Role recognition: user turns align right in a filled bubble, assistant turns align left, each with a role
-  chip, timestamp, `interrupted` marker and token usage.
+  chip, timestamp, `interrupted` marker and token usage; synthetic injections align left in a dashed card.
 * Search counts its matches, scrolls to and outlines the first matching turn, and highlights plain-text
   matches in the transcript and in the list snippets. Same-day messages are separated by a date line.
 * Read limits are unchanged in spirit and now per block: 4000 messages, 40 000 characters per prose block,
@@ -63,13 +74,14 @@ the official workspace client, so it no longer drifts with upstream UI changes.
 
 ### Verification
 
-* `_work/verify/verify-host.mjs` — 45/45 host assertions pass (block mapping, the injected-snapshot split
-  both by marker and by preamble, tool-call/result pairing, per-block clamping, the 4000-message and 4 MiB
+* `_work/verify/verify-host.mjs` — 59/59 host assertions pass (block mapping, the injected-snapshot split
+  both by marker and by preamble, the `agent-instructions` snapshot parse including its file list, the
+  synthetic/human source split, tool-call/result pairing, per-block clamping, the 4000-message and 4 MiB
   limits, the degraded backend, and the HTTP boundary).
-* `_work/verify/verify-client.mjs` — 122/122 browser-half assertions pass (slot ids and orders, locale
+* `_work/verify/verify-client.mjs` — 142/142 browser-half assertions pass (slot ids and orders, locale
   dictionary balance and coverage, hook-order stability across re-renders, the structured transcript
-  rendering, search highlighting, clipboard assembly, and the contract that a cancelled confirmation sends
-  **no** delete request).
+  rendering, synthetic-injection lanes and cards, search highlighting, clipboard assembly, the
+  legacy-payload fallback, and the contract that a cancelled confirmation sends **no** delete request).
 * `_work/verify/verify-package.mjs` — 28/28: the real `evaluatePluginCompatibility` from the installed dsh
   accepts the package, the published file list is complete, and `lib/client.js` rebuilds byte-for-byte.
 * `_work/verify/verify-profile.mjs` — 13/13: the profile loader `dsh web` uses composes the installed

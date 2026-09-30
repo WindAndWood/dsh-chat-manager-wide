@@ -96,6 +96,9 @@ const ARCHIVE_CSS = [
   '.dcmArchiveTurn{display:flex;flex-direction:column;gap:4px;max-width:90%;border-radius:14px}',
   '.dcmArchiveTurn-user{align-self:flex-end;align-items:flex-end}',
   '.dcmArchiveTurn-assistant{align-self:flex-start}',
+  '.dcmArchiveTurn-synthetic{align-self:flex-start}',
+  '.dcmArchiveTurn-synthetic .dcmArchiveTurnBody{background:var(--dsw-alias-bg-layer-2);border-style:dashed}',
+  '.dcmArchiveTurn-synthetic .dcmArchiveRoleChip{color:var(--dsw-alias-label-secondary)}',
   '.dcmArchiveTurnHit{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}',
   '.dcmArchiveRole{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary);font-size:11px}',
   '.dcmArchiveRoleChip{font-weight:500}',
@@ -117,6 +120,13 @@ const ARCHIVE_CSS = [
   '.dcmArchiveChip{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:4px 8px;color:var(--dsw-alias-label-secondary);font-size:12px}',
   '.dcmArchiveUsage{color:var(--dsw-alias-label-secondary)}',
   '.dcmArchiveInterrupted{color:var(--dsw-alias-state-warn-primary)}',
+  '.dcmArchiveInjection{display:flex;flex-direction:column;gap:8px}',
+  '.dcmArchiveInjectionIntro{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px}',
+  '.dcmArchiveFileList{display:flex;flex-direction:column;gap:2px}',
+  '.dcmArchiveFileRow{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px}',
+  '.dcmArchiveFilePath{color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+  '.dcmArchiveFileAction{flex:none;color:var(--dsw-alias-label-secondary)}',
+  '.dcmArchiveInjectionSection{display:flex;flex-direction:column;gap:4px;padding-left:8px;border-left:2px solid var(--dsw-alias-border-l2)}',
   '.dcmArchivePlaceholder{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;flex:1;min-height:0;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px}',
   '.dcmArchiveNotice{color:var(--dsw-alias-label-secondary);font-size:12px}',
   '.dcmArchiveError{color:var(--dsw-alias-state-error-primary);font-size:12px;overflow-wrap:anywhere}',
@@ -296,6 +306,13 @@ const zh = {
   toolResultFailed: '结果（失败）',
   toolFailed: '失败',
   injectedContext: '系统注入的运行时上下文',
+  roleInjected: '系统注入',
+  injectedInstructions: '系统注入的工作区指令',
+  injectedFiles: '涉及文件',
+  rawInjection: '原始注入文本',
+  actionSet: '新增',
+  actionReplace: '更新',
+  actionRemove: '移除',
   interrupted: '已中断',
   imageAttachment: '图片',
   fileAttachment: '文件',
@@ -351,6 +368,13 @@ const en = {
   toolResultFailed: 'Result (failed)',
   toolFailed: 'failed',
   injectedContext: 'System-injected runtime context',
+  roleInjected: 'System-injected',
+  injectedInstructions: 'System-injected workspace instructions',
+  injectedFiles: 'Files',
+  rawInjection: 'Verbatim injected text',
+  actionSet: 'added',
+  actionReplace: 'updated',
+  actionRemove: 'removed',
   interrupted: 'interrupted',
   imageAttachment: 'Image',
   fileAttachment: 'File',
@@ -635,11 +659,44 @@ function apply(ctx) {
       }
     }
 
+    const actionKey = action => (action === 'remove' ? 'actionRemove' : action === 'replace' ? 'actionReplace' : 'actionSet')
+
+    const renderInjection = (block, key) => {
+      const children = []
+      if (block.intro !== '') {
+        children.push(h('div', { key: 'intro', className: 'dcmArchiveInjectionIntro' }, block.intro))
+      }
+      if (block.files.length > 0) {
+        children.push(h('div', { key: 'files', className: 'dcmArchiveFileList' }, block.files.map(file => h(
+          'div',
+          { key: file.path, className: 'dcmArchiveFileRow' },
+          [
+            h('span', { key: 'path', className: 'dcmArchiveFilePath' }, file.path),
+            h('span', { key: 'action', className: 'dcmArchiveFileAction' }, t(actionKey(file.action))),
+          ],
+        ))))
+      }
+      block.sections.forEach((section, index) => {
+        children.push(h('div', { key: `section-${index}`, className: 'dcmArchiveInjectionSection' }, [
+          h('div', { key: 'label', className: 'dcmArchiveFoldedLabel' }, section.path),
+          h(primitives.MarkdownText, { key: 'body', text: section.text, labels: markdownLabels }),
+        ]))
+      })
+      // The framing is part of what the model actually read: keep it reachable.
+      children.push(h('details', { key: 'raw', className: 'dcmArchiveFolded' }, [
+        h('summary', { key: 'summary' }, t('rawInjection')),
+        h('pre', { key: 'body', className: 'dcmArchivePre' }, block.raw),
+      ]))
+      return h('div', { key, className: 'dcmArchiveInjection' }, children)
+    }
+
     const renderBlock = (item, block, index) => {
       const key = `${item.seq}-${index}`
+      if (block.kind === 'injection') return renderInjection(block, key)
       if (block.kind === 'text') {
-        // Assistant prose is untrusted Markdown; authored user text stays literal.
-        return item.role === 'user'
+        // Authored user text stays literal; assistant prose and synthetic
+        // injections carry Markdown that should render.
+        return item.role === 'user' && item.synthetic !== true
           ? h('div', { key, className: 'dcmArchivePlain' }, highlight(block.text))
           : h(primitives.MarkdownText, { key, text: block.text, labels: markdownLabels })
       }
@@ -724,17 +781,25 @@ function apply(ctx) {
           day = itemDay
           nodes.push(h('div', { key: `day-${itemDay}-${item.seq}`, className: 'dcmArchiveDay' }, itemDay))
         }
+        // A synthetic `agent.inject()` context is not something the user said.
+        const synthetic = item.synthetic === true || item.injected === true
+        const lane = synthetic ? 'synthetic' : item.role
         nodes.push(h('div', {
           key: item.seq,
           'data-seq': item.seq,
           className: [
             'dcmArchiveTurn',
-            `dcmArchiveTurn-${item.role}`,
+            `dcmArchiveTurn-${lane}`,
             matchedSeqs.includes(item.seq) ? 'dcmArchiveTurnHit' : null,
           ].filter(Boolean).join(' '),
         }, [
           h('div', { key: 'role', className: 'dcmArchiveRole' }, [
-            h('span', { key: 'chip', className: 'dcmArchiveRoleChip' }, item.role === 'user' ? t('roleUser') : t('roleAssistant')),
+            h('span', { key: 'chip', className: 'dcmArchiveRoleChip' }, synthetic
+              ? t('roleInjected')
+              : (item.role === 'user' ? t('roleUser') : t('roleAssistant'))),
+            synthetic && item.source === 'agent-instructions'
+              ? h('span', { key: 'kind' }, t('injectedInstructions'))
+              : null,
             h('span', { key: 'time' }, formatArchiveTime(item.time)),
             item.interrupted === true
               ? h('span', { key: 'interrupted', className: 'dcmArchiveInterrupted' }, t('interrupted'))

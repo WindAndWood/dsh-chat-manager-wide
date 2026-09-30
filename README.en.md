@@ -45,11 +45,14 @@ a row fills the right pane with that session's complete conversation — your tu
 bubble, the assistant's align left, each with a role chip, timestamp and token usage. Assistant prose goes
 through the official Markdown renderer (code fences, lists and tables render properly), **tool calls are
 collapsed cards** (tool name plus a one-line summary, expandable to the raw arguments and the paired
-result, errors marked in red), **reasoning** gets its own collapsed card, and **system-injected runtime
-context** is folded into a card instead of masquerading as something you said. Search counts its matches,
-scrolls to and outlines the first matching turn, highlights plain-text matches in both panes, and a date
-line separates days. The same surface has two entry points: the **Archived sessions** section in Settings,
-and **View archived transcript** in an archived row's "…" menu.
+result, errors marked in red), and **reasoning** gets its own collapsed card.
+Documents DSH reads for you (`AGENTS.md`, skill content, runtime context) are synthetic `agent.inject()`
+contexts, not words you typed, so they are labelled **system-injected** instead of "Me": injected documents
+such as `AGENTS.md` **render as Markdown**, next to the list of files involved and whether each was added,
+updated or removed, with the verbatim injected text one click away.
+Search counts its matches, scrolls to and outlines the first matching turn, highlights plain-text matches
+in both panes, and a date line separates days. The same surface has two entry points: the **Archived
+sessions** section in Settings, and **View archived transcript** in an archived row's "…" menu.
 
 > [!NOTE]
 > This fork has no public source repository yet, so this README ships without interface screenshots;

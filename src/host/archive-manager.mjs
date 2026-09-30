@@ -176,6 +176,76 @@ const INJECTED_PREAMBLES = [
   'Current runtime context: none. Earlier runtime-context snapshots no longer apply.',
 ]
 
+/**
+ * `user/message` carries both the direct human prompt and synthetic
+ * `agent.inject()` contexts; `source.kind` tells them apart (dsh-session
+ * `SessionEventMap`). `'user'` is the human prompt; anything else is injected.
+ */
+const HUMAN_SOURCE_KIND = 'user'
+/** Workspace-instruction baseline/delta, owned by dsh-agent-instructions. */
+const INSTRUCTION_SOURCE_KIND = 'agent-instructions'
+const REMINDER_OPEN = '<system-reminder>'
+const REMINDER_CLOSE = '</system-reminder>'
+/** Section separator inside a rendered instruction snapshot. */
+const INSTRUCTION_SECTION_MARKER = 'Instructions from: '
+
+/**
+ * Read the file list a rendered instruction snapshot reconciled, when the
+ * source carries one. Paths are deduplicated in first-seen order.
+ */
+const instructionFiles = source => {
+  const changes = source?.changes
+  if (!Array.isArray(changes)) return []
+  const files = []
+  const seen = new Set()
+  for (const change of changes) {
+    if (change === null || typeof change !== 'object') continue
+    if (typeof change.path !== 'string' || change.path.length === 0) continue
+    if (seen.has(change.path)) continue
+    seen.add(change.path)
+    files.push({
+      path: change.path,
+      action: change.action === 'set' || change.action === 'replace' || change.action === 'remove' ? change.action : 'set',
+    })
+  }
+  return files
+}
+
+/**
+ * Split one rendered `<system-reminder>` snapshot into its intro and one entry
+ * per instruction file, so the reader gets formatted documents instead of raw
+ * Markdown source. The verbatim text is returned too: the framing is part of
+ * what the model read, so the transcript keeps it available unfolded.
+ */
+const parseInstructionSnapshot = (text, source) => {
+  const open = text.indexOf(REMINDER_OPEN)
+  const close = text.lastIndexOf(REMINDER_CLOSE)
+  const body = (open >= 0
+    ? text.slice(open + REMINDER_OPEN.length, close < 0 ? undefined : close)
+    : text).trim()
+  const firstAt = body.indexOf(INSTRUCTION_SECTION_MARKER)
+  const intro = (firstAt < 0 ? body : body.slice(0, firstAt)).trim()
+  const sections = []
+  if (firstAt >= 0) {
+    for (const part of body.slice(firstAt).split(/\n(?=Instructions from: )/u)) {
+      if (!part.startsWith(INSTRUCTION_SECTION_MARKER)) continue
+      const newline = part.indexOf('\n')
+      const path = (newline < 0 ? part.slice(INSTRUCTION_SECTION_MARKER.length) : part.slice(INSTRUCTION_SECTION_MARKER.length, newline)).trim()
+      const content = newline < 0 ? '' : part.slice(newline + 1).trim()
+      sections.push({ path, text: content })
+    }
+  }
+  const files = instructionFiles(source)
+  return {
+    kind: 'injection',
+    form: typeof source?.form === 'string' ? source.form : 'instructions',
+    intro,
+    files: files.length > 0 ? files : sections.map(section => ({ path: section.path, action: 'set' })),
+    sections,
+    raw: text,
+  }
+}
+
 const clampDetail = (value, limit) => (value.length > limit
   ? { text: `${value.slice(0, limit)}…`, truncated: true }
   : { text: value, truncated: false })
@@ -221,12 +291,28 @@ const userTextBlocks = (text, markedInjected) => {
  * Turn one surface event's content blocks into structured transcript blocks.
  * Every text-carrying block is charged to the shared budget.
  */
-const transcriptBlocks = (content, budget, markedInjected) => {
+const transcriptBlocks = (content, budget, options) => {
   const blocks = []
   let truncated = false
   for (const block of Array.isArray(content) ? content : []) {
     if (block?.type === 'text' && typeof block.text === 'string' && block.text.trim().length > 0) {
-      for (const piece of userTextBlocks(block.text, markedInjected)) {
+      // A rendered workspace-instruction snapshot becomes one structured card.
+      const instructions = options.synthetic
+        && (options.source === INSTRUCTION_SOURCE_KIND || block.text.trimStart().startsWith(REMINDER_OPEN))
+      if (instructions) {
+        const parsed = parseInstructionSnapshot(block.text, options.sourceRecord)
+        const charged = [
+          parsed.intro,
+          parsed.raw,
+          ...parsed.sections.map(section => section.text),
+        ].filter(part => typeof part === 'string')
+        for (const part of charged) {
+          if (!budget.take(part.length)) return { blocks, truncated: true }
+        }
+        blocks.push(parsed)
+        continue
+      }
+      for (const piece of userTextBlocks(block.text, options.injected)) {
         const clamped = clampDetail(piece.text, DETAIL_TEXT_LIMIT)
         if (!budget.take(clamped.text.length)) return { blocks, truncated: true }
         if (clamped.truncated) truncated = true
@@ -320,8 +406,16 @@ const readStructuredDetail = async (sessionQuery, id) => {
       break
     }
     const content = isUser ? event.data?.content : event.data?.message?.content
-    const markedInjected = isUser && event.data?.source?.kind === INJECTED_SOURCE_KIND
-    const extracted = transcriptBlocks(content, budget, markedInjected)
+    const sourceKind = typeof event.data?.source?.kind === 'string' ? event.data.source.kind : null
+    const markedInjected = isUser && sourceKind === INJECTED_SOURCE_KIND
+    // `user` is the human prompt; every other source kind is synthetic injection.
+    const synthetic = isUser && sourceKind !== null && sourceKind !== HUMAN_SOURCE_KIND
+    const extracted = transcriptBlocks(content, budget, {
+      injected: markedInjected,
+      synthetic,
+      source: sourceKind,
+      sourceRecord: event.data?.source,
+    })
     if (extracted.truncated) truncated = true
     if (extracted.blocks.length === 0) {
       if (budget.exhausted) {
@@ -351,6 +445,8 @@ const readStructuredDetail = async (sessionQuery, id) => {
       blocks: extracted.blocks,
     }
     if (markedInjected) item.injected = true
+    if (isUser && sourceKind !== null) item.source = sourceKind
+    if (synthetic) item.synthetic = true
     if (!isUser && event.data?.interrupted === true) item.interrupted = true
     const usage = isUser ? undefined : event.data?.usage
     if (usage !== undefined && typeof usage.inputTokens === 'number' && typeof usage.outputTokens === 'number') {
