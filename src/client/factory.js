@@ -91,10 +91,32 @@ const ARCHIVE_CSS = [
   '.dcmArchiveDetailTitle{color:var(--dsw-alias-label-primary);font-size:13px;font-weight:500;overflow-wrap:anywhere}',
   '.dcmArchiveDetailMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:20px;color:var(--dsw-alias-label-secondary);font-size:12px}',
   '.dcmArchiveTranscript{flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}',
-  '.dcmArchiveMessage{display:flex;flex-direction:column;gap:4px;border:1px solid transparent;border-radius:10px;padding:8px 10px;background:var(--dsw-alias-bg-layer-1)}',
-  '.dcmArchiveMessageAssistant{background:transparent;border-color:var(--dsw-alias-border-l2)}',
-  '.dcmArchiveMessageHead{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--dsw-alias-label-secondary);font-size:11px}',
-  '.dcmArchiveMessageBody{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;white-space:pre-wrap;overflow-wrap:anywhere}',
+  '.dcmArchiveDay{display:flex;align-items:center;gap:8px;margin:2px 0;color:var(--dsw-alias-label-secondary);font-size:11px}',
+  '.dcmArchiveDay:before,.dcmArchiveDay:after{content:"";flex:1;height:1px;background:var(--dsw-alias-border-l2)}',
+  '.dcmArchiveTurn{display:flex;flex-direction:column;gap:4px;max-width:90%;border-radius:14px}',
+  '.dcmArchiveTurn-user{align-self:flex-end;align-items:flex-end}',
+  '.dcmArchiveTurn-assistant{align-self:flex-start}',
+  '.dcmArchiveTurnHit{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}',
+  '.dcmArchiveRole{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary);font-size:11px}',
+  '.dcmArchiveRoleChip{font-weight:500}',
+  '.dcmArchiveTurn-user .dcmArchiveRoleChip{color:var(--dsw-alias-brand-primary)}',
+  '.dcmArchiveTurnBody{display:flex;flex-direction:column;gap:8px;padding:8px 12px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;overflow-wrap:anywhere}',
+  '.dcmArchiveTurn-user .dcmArchiveTurnBody{background:var(--dsw-alias-bg-layer-1);border-color:transparent}',
+  '.dcmArchiveTurn-assistant .dcmArchiveTurnBody{background:transparent}',
+  '.dcmArchivePlain{white-space:pre-wrap;color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}',
+  '.dcmArchiveMark{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);border-radius:3px;padding:0 1px}',
+  '.dcmArchiveFolded{border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);font-size:12px}',
+  '.dcmArchiveFolded>summary{cursor:pointer;padding:6px 10px;color:var(--dsw-alias-label-secondary);display:flex;align-items:center;gap:8px;min-width:0}',
+  '.dcmArchiveToolName{color:var(--dsw-alias-label-primary);font-weight:500;flex:none}',
+  '.dcmArchiveToolHint{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+  '.dcmArchiveToolFlag{flex:none;color:var(--dsw-alias-state-error-primary)}',
+  '.dcmArchiveFoldedBody{display:flex;flex-direction:column;gap:4px;padding:0 10px 8px}',
+  '.dcmArchiveFoldedLabel{color:var(--dsw-alias-label-secondary);font-size:11px}',
+  '.dcmArchivePre{margin:0;padding:8px 10px;border-radius:8px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto}',
+  '.dcmArchiveToolError{border-color:var(--dsw-alias-state-error-primary)}',
+  '.dcmArchiveChip{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:4px 8px;color:var(--dsw-alias-label-secondary);font-size:12px}',
+  '.dcmArchiveUsage{color:var(--dsw-alias-label-secondary)}',
+  '.dcmArchiveInterrupted{color:var(--dsw-alias-state-warn-primary)}',
   '.dcmArchivePlaceholder{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;flex:1;min-height:0;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px}',
   '.dcmArchiveNotice{color:var(--dsw-alias-label-secondary);font-size:12px}',
   '.dcmArchiveError{color:var(--dsw-alias-state-error-primary);font-size:12px;overflow-wrap:anywhere}',
@@ -247,8 +269,25 @@ const zh = {
   detailNoMessages: '该归档会话没有可显示的对话消息。',
   detailMeta: '共 {n} 条消息',
   detailTruncated: '内容较长，仅显示前 {n} 条消息。',
+  degradedNotice: '当前 DSH 后端不提供结构化事件，这里只能显示压平后的文本。',
   roleUser: '我',
   roleAssistant: '助手',
+  reasoning: '思考过程',
+  toolCall: '工具调用',
+  toolArguments: '参数',
+  toolResult: '结果',
+  toolResultFailed: '结果（失败）',
+  toolFailed: '失败',
+  injectedContext: '系统注入的运行时上下文',
+  interrupted: '已中断',
+  imageAttachment: '图片',
+  fileAttachment: '文件',
+  bytesUnit: '字节',
+  matchCount: '{n} 处匹配',
+  jumpToMatch: '跳到首处匹配',
+  copyCode: '复制代码',
+  copiedCode: '已复制',
+  footnotes: '脚注',
   copy: '复制对话',
   copied: '已复制',
   retry: '重试',
@@ -285,8 +324,25 @@ const en = {
   detailNoMessages: 'This archived session has no conversation messages to show.',
   detailMeta: '{n} messages',
   detailTruncated: 'Only the first {n} messages are shown.',
+  degradedNotice: 'This DSH backend exposes no structured events, so only flattened text is available here.',
   roleUser: 'Me',
   roleAssistant: 'Assistant',
+  reasoning: 'Reasoning',
+  toolCall: 'Tool call',
+  toolArguments: 'Arguments',
+  toolResult: 'Result',
+  toolResultFailed: 'Result (failed)',
+  toolFailed: 'failed',
+  injectedContext: 'System-injected runtime context',
+  interrupted: 'interrupted',
+  imageAttachment: 'Image',
+  fileAttachment: 'File',
+  bytesUnit: 'bytes',
+  matchCount: '{n} matches',
+  jumpToMatch: 'Jump to first match',
+  copyCode: 'Copy code',
+  copiedCode: 'Copied',
+  footnotes: 'Footnotes',
   copy: 'Copy conversation',
   copied: 'Copied',
   retry: 'Retry',
@@ -464,15 +520,162 @@ function apply(ctx) {
       })
     }
 
+    // --- structured transcript rendering ---------------------------------
+    // The Host hands over the original content blocks, so prose, reasoning and
+    // tool calls are rendered apart instead of as one flattened text.
+    const markdownLabels = React.useMemo(() => ({
+      code: { copyLabel: t('copyCode'), copiedLabel: t('copiedCode') },
+      footnotes: t('footnotes'),
+    }), [t])
+
+    const searchNeedle = normalizedQuery.toLowerCase()
+    const blockSearchText = block => [
+      typeof block.text === 'string' ? block.text : '',
+      typeof block.name === 'string' ? block.name : '',
+      typeof block.arguments === 'string' ? block.arguments : '',
+      block.result === undefined ? '' : block.result.text,
+    ].join('\n').toLowerCase()
+    const matchedSeqs = React.useMemo(() => {
+      if (searchNeedle.length === 0) return EMPTY_LIST
+      return detail.items
+        .filter(item => item.blocks.some(block => blockSearchText(block).includes(searchNeedle)))
+        .map(item => item.seq)
+    }, [detail.items, searchNeedle])
+
+    const transcriptRef = React.useRef(null)
+    const firstMatchSeq = matchedSeqs.length > 0 ? matchedSeqs[0] : null
+    React.useEffect(() => {
+      const container = transcriptRef.current
+      if (firstMatchSeq === null || container === null || typeof container.querySelector !== 'function') return
+      const node = container.querySelector(`[data-seq="${firstMatchSeq}"]`)
+      if (node !== null && typeof node.scrollIntoView === 'function') node.scrollIntoView({ block: 'center' })
+    }, [firstMatchSeq, detail.sessionId])
+
+    const blockCopyText = block => {
+      if (block.kind === 'text' || block.kind === 'injected' || block.kind === 'reasoning') return block.text
+      if (block.kind === 'tool') {
+        return [block.name, block.arguments, block.result === undefined ? '' : block.result.text]
+          .filter(part => typeof part === 'string' && part.length > 0)
+          .join('\n')
+      }
+      if (block.kind === 'image') return `[${t('imageAttachment')}${block.name === '' ? '' : ` ${block.name}`}]`
+      if (block.kind === 'file') return `[${t('fileAttachment')}${block.name === '' ? '' : ` ${block.name}`}]`
+      return ''
+    }
+
     const copyDetail = () => {
       if (!clipboardAvailable || detail.items.length === 0) return
       const text = detail.items
-        .map(item => `${item.role === 'user' ? t('roleUser') : t('roleAssistant')} ${formatArchiveTime(item.time)}\n${item.text}`)
+        .map(item => {
+          const head = `${item.role === 'user' ? t('roleUser') : t('roleAssistant')} ${formatArchiveTime(item.time)}`
+          const body = item.blocks.map(blockCopyText).filter(part => part.length > 0).join('\n')
+          return `${head}\n${body}`
+        })
         .join('\n\n')
       navigator.clipboard.writeText(text).then(() => {
         setCopyState('copied')
         window.setTimeout(() => setCopyState('idle'), 1600)
       }).catch(() => setCopyState('idle'))
+    }
+
+    /** Highlight plain-text matches; Markdown bodies rely on the turn outline. */
+    const highlight = text => {
+      if (searchNeedle.length === 0) return text
+      const lower = text.toLowerCase()
+      if (!lower.includes(searchNeedle)) return text
+      const parts = []
+      let cursor = 0
+      let at = lower.indexOf(searchNeedle)
+      while (at >= 0) {
+        if (at > cursor) parts.push(text.slice(cursor, at))
+        parts.push(h('mark', { key: `mark-${at}`, className: 'dcmArchiveMark' }, text.slice(at, at + searchNeedle.length)))
+        cursor = at + searchNeedle.length
+        at = lower.indexOf(searchNeedle, cursor)
+      }
+      if (cursor < text.length) parts.push(text.slice(cursor))
+      return parts
+    }
+
+    const toolHint = block => {
+      try {
+        const parsed = JSON.parse(block.arguments)
+        if (parsed !== null && typeof parsed === 'object') {
+          for (const field of ['description', 'command', 'path']) {
+            if (typeof parsed[field] === 'string' && parsed[field].length > 0) return parsed[field]
+          }
+        }
+      } catch {
+        // Not JSON: the raw text below is the only honest rendering.
+      }
+      return ''
+    }
+
+    const prettyArguments = block => {
+      try {
+        return JSON.stringify(JSON.parse(block.arguments), null, 2)
+      } catch {
+        return block.arguments
+      }
+    }
+
+    const renderBlock = (item, block, index) => {
+      const key = `${item.seq}-${index}`
+      if (block.kind === 'text') {
+        // Assistant prose is untrusted Markdown; authored user text stays literal.
+        return item.role === 'user'
+          ? h('div', { key, className: 'dcmArchivePlain' }, highlight(block.text))
+          : h(primitives.MarkdownText, { key, text: block.text, labels: markdownLabels })
+      }
+      if (block.kind === 'injected') {
+        return h('details', { key, className: 'dcmArchiveFolded' }, [
+          h('summary', { key: 'summary' }, t('injectedContext')),
+          h('pre', { key: 'body', className: 'dcmArchivePre' }, block.text),
+        ])
+      }
+      if (block.kind === 'reasoning') {
+        return h('details', { key, className: 'dcmArchiveFolded' }, [
+          h('summary', { key: 'summary' }, t('reasoning')),
+          h('pre', { key: 'body', className: 'dcmArchivePre' }, block.text),
+        ])
+      }
+      if (block.kind === 'tool') {
+        const hint = toolHint(block)
+        const failed = block.result !== undefined && block.result.isError === true
+        const children = [
+          h('summary', { key: 'summary' }, [
+            h('span', { key: 'name', className: 'dcmArchiveToolName' }, block.name === '' ? t('toolCall') : block.name),
+            hint === '' ? null : h('span', { key: 'hint', className: 'dcmArchiveToolHint' }, hint),
+            failed ? h('span', { key: 'flag', className: 'dcmArchiveToolFlag' }, t('toolFailed')) : null,
+          ]),
+          h('div', { key: 'arguments', className: 'dcmArchiveFoldedBody' }, [
+            h('div', { key: 'label', className: 'dcmArchiveFoldedLabel' }, t('toolArguments')),
+            h('pre', { key: 'pre', className: 'dcmArchivePre' }, prettyArguments(block)),
+          ]),
+        ]
+        if (block.result !== undefined) {
+          children.push(h('div', { key: 'result', className: 'dcmArchiveFoldedBody' }, [
+            h('div', { key: 'label', className: 'dcmArchiveFoldedLabel' }, failed ? t('toolResultFailed') : t('toolResult')),
+            h('pre', { key: 'pre', className: 'dcmArchivePre' }, block.result.text),
+          ]))
+        }
+        return h('details', {
+          key,
+          className: failed ? 'dcmArchiveFolded dcmArchiveToolError' : 'dcmArchiveFolded',
+        }, children)
+      }
+      if (block.kind === 'image' || block.kind === 'file') {
+        const label = block.kind === 'image' ? t('imageAttachment') : t('fileAttachment')
+        const size = block.bytes > 0 ? ` · ${block.bytes} ${t('bytesUnit')}` : ''
+        return h('div', { key, className: 'dcmArchiveChip' }, `${label}${block.name === '' ? '' : ` ${block.name}`}${size}`)
+      }
+      return null
+    }
+
+    const dayOf = time => {
+      if (typeof time !== 'number' || !Number.isFinite(time)) return ''
+      const date = new Date(time)
+      const pad = value => String(value).padStart(2, '0')
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
     }
 
     const renderTranscript = () => {
@@ -496,24 +699,45 @@ function apply(ctx) {
       if (detail.items.length === 0) {
         return h('div', { className: 'dcmArchivePlaceholder' }, t('detailNoMessages'))
       }
-      const messages = detail.items.map(item => h('div', {
-        key: item.seq,
-        className: item.role === 'user'
-          ? 'dcmArchiveMessage'
-          : 'dcmArchiveMessage dcmArchiveMessageAssistant',
-      }, [
-        h('div', { className: 'dcmArchiveMessageHead', key: 'head' }, [
-          h('span', { key: 'role' }, item.role === 'user' ? t('roleUser') : t('roleAssistant')),
-          h('span', { key: 'time' }, formatArchiveTime(item.time)),
-        ]),
-        h('div', { className: 'dcmArchiveMessageBody', key: 'body' }, item.text),
-      ]))
-      return h(React.Fragment, null, [
-        ...messages,
-        detail.truncated
-          ? h('div', { key: 'truncated', className: 'dcmArchiveNotice' }, t('detailTruncated', { n: detail.shown }))
-          : null,
-      ])
+      const nodes = []
+      let day = null
+      for (const item of detail.items) {
+        const itemDay = dayOf(item.time)
+        if (itemDay !== '' && itemDay !== day) {
+          day = itemDay
+          nodes.push(h('div', { key: `day-${itemDay}-${item.seq}`, className: 'dcmArchiveDay' }, itemDay))
+        }
+        nodes.push(h('div', {
+          key: item.seq,
+          'data-seq': item.seq,
+          className: [
+            'dcmArchiveTurn',
+            `dcmArchiveTurn-${item.role}`,
+            matchedSeqs.includes(item.seq) ? 'dcmArchiveTurnHit' : null,
+          ].filter(Boolean).join(' '),
+        }, [
+          h('div', { key: 'role', className: 'dcmArchiveRole' }, [
+            h('span', { key: 'chip', className: 'dcmArchiveRoleChip' }, item.role === 'user' ? t('roleUser') : t('roleAssistant')),
+            h('span', { key: 'time' }, formatArchiveTime(item.time)),
+            item.interrupted === true
+              ? h('span', { key: 'interrupted', className: 'dcmArchiveInterrupted' }, t('interrupted'))
+              : null,
+            item.usage === undefined
+              ? null
+              : h('span', { key: 'usage', className: 'dcmArchiveUsage' }, `↑${item.usage.input} ↓${item.usage.output}`),
+          ]),
+          h('div', { key: 'body', className: 'dcmArchiveTurnBody' }, [
+            ...item.blocks.map((block, index) => renderBlock(item, block, index)),
+            item.degraded === true
+              ? h('div', { key: 'degraded', className: 'dcmArchiveNotice' }, t('degradedNotice'))
+              : null,
+          ]),
+        ]))
+      }
+      if (detail.truncated) {
+        nodes.push(h('div', { key: 'truncated', className: 'dcmArchiveNotice' }, t('detailTruncated', { n: detail.shown })))
+      }
+      return h(React.Fragment, null, nodes)
     }
 
     const searchBox = h('input', {
@@ -547,10 +771,10 @@ function apply(ctx) {
               loadDetail(row.id, row.title)
             },
           }, [
-            h('div', { className: 'dcmArchiveRowTitle', key: 'title' }, row.title),
+            h('div', { className: 'dcmArchiveRowTitle', key: 'title' }, highlight(row.title)),
             h('div', { className: 'dcmArchiveRowMeta', key: 'meta' }, row.workspace),
             snippets.has(row.id)
-              ? h('div', { className: 'dcmArchiveRowSnippet', key: 'snippet' }, snippets.get(row.id))
+              ? h('div', { className: 'dcmArchiveRowSnippet', key: 'snippet' }, highlight(snippets.get(row.id)))
               : null,
             h('div', { className: 'dcmArchiveRowActions', key: 'actions' }, [
               h(primitives.Button, {
@@ -585,6 +809,9 @@ function apply(ctx) {
           h('div', { className: 'dcmArchiveDetailTitle', key: 'title' }, detail.sessionId === null ? t('detailTitle') : detail.title),
           h('div', { className: 'dcmArchiveDetailMeta', key: 'meta' }, [
             h('span', { key: 'count' }, detail.status === 'ready' ? t('detailMeta', { n: detail.total }) : ''),
+            detail.status === 'ready' && matchedSeqs.length > 0
+              ? h('span', { key: 'matches', className: 'dcmArchiveNotice' }, t('matchCount', { n: matchedSeqs.length }))
+              : null,
             detail.status === 'ready' && clipboardAvailable
               ? h(primitives.Button, {
                 key: 'copy',
@@ -595,7 +822,7 @@ function apply(ctx) {
               : null,
           ]),
         ]),
-        h('div', { className: 'dcmArchiveTranscript', key: 'transcript' }, renderTranscript()),
+        h('div', { className: 'dcmArchiveTranscript', key: 'transcript', ref: transcriptRef }, renderTranscript()),
       ]),
     ])
 

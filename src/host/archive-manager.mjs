@@ -156,9 +156,125 @@ export async function searchArchivedSessions({ workspaceRegistry, sessionQuery }
 const DETAIL_MESSAGE_LIMIT = 4000
 const DETAIL_TEXT_LIMIT = 40000
 const DETAIL_TOTAL_TEXT_LIMIT = 4 * 1024 * 1024
+const REASONING_TEXT_LIMIT = 20000
+const TOOL_ARGUMENT_LIMIT = 8000
+const TOOL_RESULT_TEXT_LIMIT = 20000
 
 /**
- * Read the current user/assistant transcript of one archived session.
+ * Loop-owned runtime-context snapshots reach the surface as `user/message`
+ * events whose `source.kind` is this marker (dsh-agent-loop `isOwned`), so the
+ * archived transcript can fold them instead of presenting them as user turns.
+ */
+const INJECTED_SOURCE_KIND = 'runtime-context'
+/**
+ * Text fallback for logs written before the source marker existed. Both
+ * preambles are hard-coded English constants in dsh-system-prompt /
+ * dsh-agent-loop, and a snapshot is always one text block.
+ */
+const INJECTED_PREAMBLES = [
+  'Current runtime context. This snapshot supersedes earlier runtime-context snapshots.',
+  'Current runtime context: none. Earlier runtime-context snapshots no longer apply.',
+]
+
+const clampDetail = (value, limit) => (value.length > limit
+  ? { text: `${value.slice(0, limit)}…`, truncated: true }
+  : { text: value, truncated: false })
+
+const blockTextOf = content => (Array.isArray(content) ? content : [])
+  .filter(block => block?.type === 'text' && typeof block.text === 'string')
+  .map(block => block.text)
+  .join('\n')
+
+/** Index every tool result by call id so a tool-call block can carry its output. */
+const indexToolResults = events => {
+  const results = new Map()
+  for (const event of events) {
+    if (event?.type !== 'tool/result') continue
+    const callId = event.data?.callId
+    if (typeof callId !== 'string' || callId.length === 0) continue
+    const message = event.data?.message
+    results.set(callId, {
+      text: blockTextOf(message?.content),
+      isError: message?.isError === true || event.data?.error !== undefined,
+    })
+  }
+  return results
+}
+
+/**
+ * Split one user text block into authored prose and an injected snapshot.
+ * The marker is honoured first; the preamble scan covers older logs.
+ */
+const userTextBlocks = (text, markedInjected) => {
+  const finds = INJECTED_PREAMBLES.map(preamble => text.indexOf(preamble)).filter(index => index >= 0)
+  const at = finds.length === 0 ? -1 : Math.min(...finds)
+  if (markedInjected && at < 0) return [{ kind: 'injected', text }]
+  if (at < 0) return [{ kind: 'text', text }]
+  const blocks = []
+  const head = text.slice(0, at).trim()
+  if (head.length > 0) blocks.push({ kind: 'text', text: head })
+  blocks.push({ kind: 'injected', text: text.slice(at) })
+  return blocks
+}
+
+/**
+ * Turn one surface event's content blocks into structured transcript blocks.
+ * Every text-carrying block is charged to the shared budget.
+ */
+const transcriptBlocks = (content, budget, markedInjected) => {
+  const blocks = []
+  let truncated = false
+  for (const block of Array.isArray(content) ? content : []) {
+    if (block?.type === 'text' && typeof block.text === 'string' && block.text.trim().length > 0) {
+      for (const piece of userTextBlocks(block.text, markedInjected)) {
+        const clamped = clampDetail(piece.text, DETAIL_TEXT_LIMIT)
+        if (!budget.take(clamped.text.length)) return { blocks, truncated: true }
+        if (clamped.truncated) truncated = true
+        blocks.push({ kind: piece.kind, text: clamped.text })
+      }
+    } else if (block?.type === 'reasoning' && typeof block.text === 'string' && block.text.trim().length > 0) {
+      const clamped = clampDetail(block.text, REASONING_TEXT_LIMIT)
+      if (!budget.take(clamped.text.length)) return { blocks, truncated: true }
+      if (clamped.truncated) truncated = true
+      blocks.push({ kind: 'reasoning', text: clamped.text })
+    } else if (block?.type === 'tool-call') {
+      const raw = typeof block.arguments === 'string' ? block.arguments : ''
+      const clamped = clampDetail(raw, TOOL_ARGUMENT_LIMIT)
+      if (!budget.take(clamped.text.length)) return { blocks, truncated: true }
+      if (clamped.truncated) truncated = true
+      blocks.push({
+        kind: 'tool',
+        name: typeof block.name === 'string' ? block.name : '',
+        arguments: clamped.text,
+        argumentsTruncated: clamped.truncated,
+        ...(typeof block.id === 'string' ? { callId: block.id } : {}),
+      })
+    } else if (block?.type === 'image') {
+      blocks.push({
+        kind: 'image',
+        name: typeof block.attachment?.name === 'string' ? block.attachment.name : '',
+        bytes: typeof block.attachment?.bytes === 'number' ? block.attachment.bytes : 0,
+      })
+    } else if (block?.type === 'file') {
+      blocks.push({
+        kind: 'file',
+        name: typeof block.attachment?.name === 'string' ? block.attachment.name : '',
+        bytes: typeof block.attachment?.bytes === 'number' ? block.attachment.bytes : 0,
+      })
+    }
+  }
+  return { blocks, truncated }
+}
+
+/**
+ * Read the current user/assistant transcript of one archived session with its
+ * content structure intact.
+ *
+ * `sessionQuery.filterEvents` returns a flattened `text` that joins assistant
+ * prose, tool names and raw tool arguments and drops reasoning, which is why the
+ * archived transcript used to look crowded. `readSurface` exposes the same
+ * current surface with the original `text` / `reasoning` / `tool-call` blocks.
+ *
  * Archive membership is re-checked here so this read stays inside the archive set.
  */
 export async function readArchivedSessionDetail({ workspaceRegistry, sessionQuery }, sessionId) {
@@ -166,10 +282,92 @@ export async function readArchivedSessionDetail({ workspaceRegistry, sessionQuer
   if (!archiveIds(workspaceRegistry).includes(id)) {
     throw new TypeError('session is not archived')
   }
+  if (typeof sessionQuery?.readSurface === 'function') {
+    return readStructuredDetail(sessionQuery, id)
+  }
   if (typeof sessionQuery?.filterEvents !== 'function') {
     throw new Error('archived history read is unavailable')
   }
+  return readFlattenedDetail(sessionQuery, id)
+}
 
+const readStructuredDetail = async (sessionQuery, id) => {
+  const snapshot = await sessionQuery.readSurface(id)
+  const events = Array.isArray(snapshot?.events) ? snapshot.events : []
+  const toolResults = indexToolResults(events)
+
+  let textBudget = 0
+  let truncated = false
+  let total = 0
+  const budget = {
+    exhausted: false,
+    take(length) {
+      if (textBudget + length > DETAIL_TOTAL_TEXT_LIMIT) {
+        budget.exhausted = true
+        return false
+      }
+      textBudget += length
+      return true
+    },
+  }
+  const items = []
+
+  for (const event of events) {
+    const isUser = event?.type === 'user/message'
+    if (!isUser && event?.type !== 'assistant/message') continue
+    if (items.length >= DETAIL_MESSAGE_LIMIT) {
+      truncated = true
+      break
+    }
+    const content = isUser ? event.data?.content : event.data?.message?.content
+    const markedInjected = isUser && event.data?.source?.kind === INJECTED_SOURCE_KIND
+    const extracted = transcriptBlocks(content, budget, markedInjected)
+    if (extracted.truncated) truncated = true
+    if (extracted.blocks.length === 0) {
+      if (budget.exhausted) {
+        truncated = true
+        break
+      }
+      continue
+    }
+    total += 1
+    // Attach each tool output to the call that produced it.
+    for (const block of extracted.blocks) {
+      if (block.kind !== 'tool' || block.callId === undefined) continue
+      const result = toolResults.get(block.callId)
+      if (result === undefined) continue
+      const clamped = clampDetail(result.text, TOOL_RESULT_TEXT_LIMIT)
+      if (!budget.take(clamped.text.length)) {
+        truncated = true
+        break
+      }
+      if (clamped.truncated) truncated = true
+      block.result = { text: clamped.text, isError: result.isError }
+    }
+    const item = {
+      seq: Number.isInteger(event.seq) ? event.seq : items.length,
+      role: isUser ? 'user' : 'assistant',
+      time: typeof event.time === 'number' ? event.time : null,
+      blocks: extracted.blocks,
+    }
+    if (markedInjected) item.injected = true
+    if (!isUser && event.data?.interrupted === true) item.interrupted = true
+    const usage = isUser ? undefined : event.data?.usage
+    if (usage !== undefined && typeof usage.inputTokens === 'number' && typeof usage.outputTokens === 'number') {
+      item.usage = { input: usage.inputTokens, output: usage.outputTokens }
+    }
+    items.push(item)
+    if (budget.exhausted) {
+      truncated = true
+      break
+    }
+  }
+
+  return { items, total, shown: items.length, truncated }
+}
+
+/** Graceful degradation for a backend without `readSurface`: flat text only. */
+const readFlattenedDetail = async (sessionQuery, id) => {
   const documents = await sessionQuery.filterEvents(id, [
     { kind: 'type', values: ['user/message', 'assistant/message'] },
     { kind: 'surface', values: ['current'] },
@@ -178,6 +376,7 @@ export async function readArchivedSessionDetail({ workspaceRegistry, sessionQuer
   const items = []
   let textBudget = 0
   let truncated = false
+  let total = 0
   for (const document of found) {
     if (items.length >= DETAIL_MESSAGE_LIMIT) {
       truncated = true
@@ -185,25 +384,23 @@ export async function readArchivedSessionDetail({ workspaceRegistry, sessionQuer
     }
     const text = typeof document?.text === 'string' ? document.text : ''
     if (text.trim().length === 0) continue
-    let body = text
-    if (body.length > DETAIL_TEXT_LIMIT) {
-      body = `${body.slice(0, DETAIL_TEXT_LIMIT)}…`
-      truncated = true
-    }
-    if (textBudget + body.length > DETAIL_TOTAL_TEXT_LIMIT) {
+    const clamped = clampDetail(text, DETAIL_TEXT_LIMIT)
+    if (textBudget + clamped.text.length > DETAIL_TOTAL_TEXT_LIMIT) {
       truncated = true
       break
     }
-    textBudget += body.length
+    if (clamped.truncated) truncated = true
+    textBudget += clamped.text.length
+    total += 1
     items.push({
       seq: Number.isInteger(document?.seq) ? document.seq : items.length,
       role: document?.type === 'user/message' ? 'user' : 'assistant',
       time: typeof document?.time === 'number' ? document.time : null,
-      text: body,
+      blocks: [{ kind: 'text', text: clamped.text }],
+      degraded: true,
     })
   }
-
-  return { items, total: found.length, shown: items.length, truncated: truncated || items.length < found.length }
+  return { items, total, shown: items.length, truncated }
 }
 
 const sendJson = (res, status, payload) => {

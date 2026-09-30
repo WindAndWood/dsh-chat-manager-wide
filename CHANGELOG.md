@@ -20,6 +20,28 @@ the official workspace client, so it no longer drifts with upstream UI changes.
   `@deepseek-ai/dsh-*` peer against the **dsh runtime version**, so `0.2.0-rc.2` is the exact claim and a
   future runtime fails loudly instead of loading an unverified client.
 
+### Changed — archived transcript
+
+* The detail route now reads `sessionQuery.readSurface()` instead of `filterEvents()`, so the Host returns
+  the original content blocks (`text` / `reasoning` / `tool-call` / `image` / `file`) instead of one
+  flattened string. `filterEvents` joined assistant prose, tool names and raw tool arguments with newlines
+  and dropped reasoning entirely — that is where the crowded transcript came from. A backend without
+  `readSurface` degrades to the old flattened text and says so in the UI.
+* Tool calls render as collapsed cards: the tool name, a one-line summary taken from the arguments'
+  `description` / `command` / `path`, the raw arguments (pretty-printed when they are JSON), and the paired
+  `tool/result` output. Failed calls are marked as errors.
+* Reasoning blocks get their own collapsed card. Loop-owned runtime-context snapshots
+  (`source.kind === 'runtime-context'`, with a preamble fallback for older logs) are folded into a
+  "system-injected runtime context" card instead of being presented as a user turn.
+* Assistant prose renders through the official `ui-primitives` `MarkdownText`; authored user text stays
+  literal, so a user's own asterisks and underscores are never reinterpreted as Markdown.
+* Role recognition: user turns align right in a filled bubble, assistant turns align left, each with a role
+  chip, timestamp, `interrupted` marker and token usage.
+* Search counts its matches, scrolls to and outlines the first matching turn, and highlights plain-text
+  matches in the transcript and in the list snippets. Same-day messages are separated by a date line.
+* Read limits are unchanged in spirit and now per block: 4000 messages, 40 000 characters per prose block,
+  20 000 per reasoning block, 8 000 per tool-argument blob, 20 000 per tool result, 4 MiB total.
+
 ### Removed
 
 * `compatibility.json` — no upstream client version matrix any more.
@@ -41,14 +63,17 @@ the official workspace client, so it no longer drifts with upstream UI changes.
 
 ### Verification
 
-* `_work/verify/verify-host.mjs` — 20/20 host assertions pass.
-* `_work/verify/verify-client.mjs` — 84/84 new browser-half assertions pass (slot ids and orders, locale
-  dictionary balance and coverage, hook-order stability across re-renders, and the contract that a
-  cancelled confirmation sends **no** delete request).
-* `_work/verify/verify-package.mjs` — the real `evaluatePluginCompatibility` from the installed dsh accepts
-  the package, the published file list is complete, and `lib/client.js` rebuilds byte-for-byte.
-* `_work/verify/verify-profile.mjs` — the profile loader `dsh web` uses composes the installed 1.5.0 bundle
-  with no skipped bundle while `@deepseek-ai/dsh-web-app` still loads.
+* `_work/verify/verify-host.mjs` — 45/45 host assertions pass (block mapping, the injected-snapshot split
+  both by marker and by preamble, tool-call/result pairing, per-block clamping, the 4000-message and 4 MiB
+  limits, the degraded backend, and the HTTP boundary).
+* `_work/verify/verify-client.mjs` — 122/122 browser-half assertions pass (slot ids and orders, locale
+  dictionary balance and coverage, hook-order stability across re-renders, the structured transcript
+  rendering, search highlighting, clipboard assembly, and the contract that a cancelled confirmation sends
+  **no** delete request).
+* `_work/verify/verify-package.mjs` — 28/28: the real `evaluatePluginCompatibility` from the installed dsh
+  accepts the package, the published file list is complete, and `lib/client.js` rebuilds byte-for-byte.
+* `_work/verify/verify-profile.mjs` — 13/13: the profile loader `dsh web` uses composes the installed
+  bundle with no skipped bundle while `@deepseek-ai/dsh-web-app` still loads.
 
 ## 1.4.1
 

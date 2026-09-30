@@ -91,7 +91,9 @@ With permission to restart DSH, verify the live UI in dark mode:
    action still work (this plugin must not have taken them over).
 2. The section lists archived sessions, filters by name or workspace, and can search archived
    user/assistant conversation content without exposing another session.
-3. Selecting a row shows that session's full transcript on the right, including role labels and timestamps.
+3. Selecting a row shows that session's full conversation on the right: user turns right-aligned in a filled
+   bubble, assistant turns left-aligned, each with a role chip and timestamp; tool calls, reasoning and
+   system-injected runtime context appear as collapsed cards, and tool failures are marked red.
 4. Restoring a disposable archived session returns it to its original workspace position without reloading the page.
 5. An archived session's native actions menu contains **View archived transcript** and the red
    **Delete session** action, in addition to the official **Archive session** entry.
