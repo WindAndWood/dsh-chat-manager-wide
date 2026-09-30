@@ -5,6 +5,17 @@
 Route C: the plugin is rebuilt as an **official-slot plugin** for DSH `0.2.0-rc.2`. It no longer replaces
 the official workspace client, so it no longer drifts with upstream UI changes.
 
+### Changed — naming and attribution
+
+* The user-facing product name is now **DSH Chat Manager Wide**, and both READMEs carry an unofficial-fork
+  statement directly under the title: forked from `dsh-chat-manager` by WSL043 (MIT), not affiliated with or
+  endorsed by DeepSeek or by the upstream author. The previous heading and tagline were upstream's exact
+  product name and tagline, which a fork must not present as its own — MIT covers the code, not a product
+  name.
+* `package.json`'s description records the same caveat, and the generated `lib/client.js` header names the
+  fork.
+* `LICENSE` and `THIRD_PARTY_NOTICES.md` are unchanged; the MIT notices and attribution were already correct.
+
 ### Changed — architecture
 
 * `lib/client.js` is now this package's own small browser module (37,185 bytes) that registers into three

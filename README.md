@@ -13,9 +13,13 @@
 
 <div align="center">
 
-# DSH Chat Manager · 聊天与会话管理器
+# DSH Chat Manager Wide · 聊天与会话管理器
 
-**在 DeepSeek Harness 原生侧边栏中搜索、恢复和安全清理会话。**
+**在 DeepSeek Harness 的官方插槽里阅读归档对话正文，并安全永久删除会话。**
+
+**非官方分支。** fork 自 [WSL043/dsh-chat-manager](https://github.com/WSL043/dsh-chat-manager)（MIT）；
+与 DeepSeek 及上游作者均**无隶属或背书关系**。上游的 MIT 许可证与署名完整保留在
+[LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 npm 包：[`dsh-chat-manager-wide`](https://www.npmjs.com/package/dsh-chat-manager-wide)(fork 自 [dsh-chat-manager](https://www.npmjs.com/package/dsh-chat-manager),后者原名 `dsh-native-session-manager`)。
 
@@ -111,8 +115,8 @@ dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
 - 操作系统、文件系统、宿主更新或第三方同步服务造成的额外副本。
 
 如果系统拒绝清理，插件会报告无法确认删除成功，不会把部分完成误报为成功。删除前请确认
-自己有权处理目标数据，并遵守适用的数据留存、审计和隐私要求。本项目是非官方社区插件，
-与 DeepSeek 无隶属或背书关系；按 [MIT 许可证](LICENSE)提供，不附带担保。
+自己有权处理目标数据，并遵守适用的数据留存、审计和隐私要求。本项目是**非官方社区插件**，
+与 DeepSeek 及上游作者 WSL043 均无隶属或背书关系；按 [MIT 许可证](LICENSE)提供，不附带担保。
 
 ## 兼容性
 

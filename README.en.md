@@ -17,13 +17,17 @@
 
 <div align="center">
 
-# DSH Chat Manager
+# DSH Chat Manager Wide
 
-npm package: [`dsh-chat-manager-wide`](https://www.npmjs.com/package/dsh-chat-manager-wide) (a fork of `dsh-chat-manager`).
+**Read archived conversations in place and permanently delete sessions, from official DeepSeek Harness slots.**
 
-**Manage DeepSeek Harness chat history from the native sidebar: search archives, restore sessions, and delete safely.**
+**Unofficial fork.** Forked from [WSL043/dsh-chat-manager](https://github.com/WSL043/dsh-chat-manager) (MIT);
+**not affiliated with or endorsed by** DeepSeek or the upstream author. Upstream's MIT license and
+attribution are kept in [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Archive manager · Conversation search · One-click restore · Safe permanent deletion
+npm package: [`dsh-chat-manager-wide`](https://www.npmjs.com/package/dsh-chat-manager-wide)
+
+Archived-transcript reading · Conversation search · Restore · Safe permanent deletion
 
 [![npm](https://img.shields.io/npm/v/dsh-chat-manager-wide?style=flat-square)](https://www.npmjs.com/package/dsh-chat-manager-wide)
 [![total npm downloads](https://img.shields.io/npm/dt/dsh-chat-manager-wide?style=flat-square&label=total%20downloads)](https://www.npmjs.com/package/dsh-chat-manager-wide)
@@ -127,8 +131,8 @@ The following are outside the plugin's deletion scope and are not guaranteed to 
 If the operating system refuses cleanup, the plugin reports that deletion could not be confirmed rather
 than misreporting partial completion as success. You are responsible for having authority to delete the
 target data and for meeting applicable retention, audit, and privacy requirements. This is an unofficial
-community plugin, not affiliated with or endorsed by DeepSeek. It is provided under the [MIT License](LICENSE),
-without warranty.
+community plugin, not affiliated with or endorsed by DeepSeek or by the upstream author WSL043. It is
+provided under the [MIT License](LICENSE), without warranty.
 
 ## Compatibility
 

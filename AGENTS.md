@@ -38,7 +38,8 @@ slot plugin (`lib/client.js`) that adds three additive entries — the `settings
 `archived-sessions`, two `sidebar.workspaces.session.menu.item` rows, and two `shell.overlay` dialogs — while
 the official archiving UI keeps working. Removing `dsh-chat-manager-wide` removes only those entries. Do not
 install the tarball under `@deepseek-ai/dsh-client-ui-workspace`; that old aliasing approach is not the
-contract. The product is shown to users as **DSH Chat Manager**.
+contract. The product is shown to users as **DSH Chat Manager Wide**, an unofficial fork of `dsh-chat-manager`
+by WSL043; it is not affiliated with or endorsed by DeepSeek or by the upstream author.
 
 ## Detect the target DSH
 

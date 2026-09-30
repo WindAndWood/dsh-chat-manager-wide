@@ -13,7 +13,7 @@ const DEFAULT_OUTPUT = resolve(root, 'lib/client.js')
  * built on the public slot API, so it carries no upstream work; the note keeps
  * the fork lineage of the host half discoverable next to the artifact.
  */
-const NOTICE = '// dsh-chat-manager-wide — DSH Chat Manager client half (official slots, MIT).\n'
+const NOTICE = '// dsh-chat-manager-wide — DSH Chat Manager Wide client half (official slots, MIT; unofficial fork of dsh-chat-manager by WSL043).\n'
 
 /**
  * Read the browser factory body and wrap it in the DSH client-module envelope.
