@@ -242,6 +242,23 @@ const formatArchiveTime = time => {
 
 const messageOf = reason => (reason instanceof Error ? reason.message : String(reason))
 
+/**
+ * Tolerate a Host half that still answers with the pre-1.5.0 flattened `text`:
+ * a browser refresh can reach a DSH process whose host half has not restarted
+ * yet, and a missing `blocks` array must degrade instead of rendering nothing.
+ */
+const normalizeDetailItem = item => {
+  if (Array.isArray(item?.blocks) && item.blocks.length > 0) return item
+  const text = typeof item?.text === 'string' ? item.text : ''
+  return {
+    seq: typeof item?.seq === 'number' ? item.seq : 0,
+    role: item?.role === 'user' ? 'user' : 'assistant',
+    time: typeof item?.time === 'number' ? item.time : null,
+    blocks: text.trim().length === 0 ? EMPTY_LIST : [{ kind: 'text', text }],
+    degraded: true,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Locale dictionaries (both shipped locales are required by the registry).
 // ---------------------------------------------------------------------------
@@ -412,7 +429,7 @@ function apply(ctx) {
           sessionId,
           title: title ?? '',
           status: 'ready',
-          items: Array.isArray(result?.items) ? result.items : EMPTY_LIST,
+          items: (Array.isArray(result?.items) ? result.items : EMPTY_LIST).map(normalizeDetailItem),
           error: null,
           truncated: result?.truncated === true,
           shown: typeof result?.shown === 'number' ? result.shown : 0,
