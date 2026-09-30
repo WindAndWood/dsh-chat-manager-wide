@@ -1,7 +1,8 @@
 # Publishing `dsh-chat-manager-wide`
 
-This directory is a complete, publishable source tree. The working copy you were given was extracted
-from the installed plugin, so `lib/client.js` already contains the fork's UI.
+This directory is a complete, publishable source tree. Since 1.5.0 the browser half is a small
+official-slot plugin: `src/client/factory.js` is the source of truth and `lib/client.js` is its generated
+artifact (`npm run build`), so the two are always in sync.
 
 ## 0. Before publishing
 
@@ -9,7 +10,7 @@ from the installed plugin, so `lib/client.js` already contains the fork's UI.
    and `homepage` stay unset on purpose: this fork has no public source repository yet, and a fork must
    not advertise upstream's coordinates. Add those three fields in the same change that creates the
    repository, then rebuild and republish.
-2. **Upstream links are already rebranded (1.4.1).** `README.md` and `README.en.md` now carry only the
+2. **Upstream links are already rebranded (1.5.0).** `README.md` and `README.en.md` now carry only the
    npm version and download badges plus the DSH compatibility and static MIT license badges. Upstream's
    GitHub release / checks / license / stars badges, the Awesome DSH listing, the image-viewer link, both
    issue-form links and all three `raw.githubusercontent.com/WSL043/...` screenshots are gone, and the
@@ -24,16 +25,17 @@ from the installed plugin, so `lib/client.js` already contains the fork's UI.
    npm login --registry https://registry.npmjs.org
    npm whoami --registry https://registry.npmjs.org
    ```
-4. **Check the name is free** against that registry:
+4. **Check what is already published** against that registry:
    ```sh
-   npm view dsh-chat-manager-wide version --registry https://registry.npmjs.org
+   npm view dsh-chat-manager-wide versions --registry https://registry.npmjs.org
    ```
-   `E404` means the name is available — it was free when this tree was prepared.
+   `1.4.0` is the only published version so far; `1.4.1` was prepared and then abandoned in favour of
+   this route C release, so do not publish `1.4.1`.
 5. **Put it in git:**
    ```sh
    git init
    git add .
-   git commit -m "dsh-chat-manager-wide 1.4.1"
+   git commit -m "dsh-chat-manager-wide 1.5.0"
    git remote add origin <your repository>
    git push -u origin main
    ```
@@ -68,26 +70,17 @@ publish; pick one of:
 
 ## 1. Build the client bundle
 
-Two builds exist; both apply the same `patchWorkspaceClient` patches, so both contain the fork.
+One build exists, it needs no dependencies and no network:
 
 ```sh
-# A) release build — the same dual-fixture composition upstream ships
-#    (needs the devDependencies: the pinned @deepseek-ai/dsh-client-ui-workspace fixtures)
-pnpm install
-pnpm run build
-
-# B) no install — patch the workspace client of the DSH you already have installed
-node scripts/build-client-local.mjs
+npm run build          # node scripts/build-client.mjs
 ```
 
-The `lib/client.js` in this tree is **build A** — the dual-fixture release form (303,999 bytes, sha256
-`116C07122100B3C8BB024FE2CC83469F07FA1ABB6FA1B6599A536D3C6AB4DEF2`), byte-for-byte the artifact that
-shipped as 1.4.0. Ship that one. Build B is the no-install fallback: it needs no devDependencies and no
-network, but it produces the local form (~320 KB) which does **not** carry the older-host compatibility
-`compatibility.json` documents, and it overwrites `lib/client.js`. If you ran B, rebuild with A before
-publishing.
+`src/client/factory.js` is the single source of truth. The composer wraps it in the DSH client-module
+envelope, derives the module id from `package.json#name`, and writes `lib/client.js`. Never hand-edit
+`lib/client.js`: `verify-package.mjs` rebuilds it and fails if the checked-in artifact differs by one byte.
 
-Whatever you run, the browser module id comes from `package.json#name`. Verify it:
+Verify the module id after building:
 
 ```sh
 node -e "const s=require('fs').readFileSync('lib/client.js','utf8');console.log(s.match(/id: \"[^\"]+\"/)[0])"
@@ -97,15 +90,15 @@ node -e "const s=require('fs').readFileSync('lib/client.js','utf8');console.log(
 ## 2. Dry run, then publish
 
 ```sh
-npm pack                    # -> dsh-chat-manager-wide-1.4.1.tgz
-tar -tzf dsh-chat-manager-wide-1.4.1.tgz    # inspect the published file list
-npm publish                 # unscoped name; 1.4.1 is a normal release, so no --tag is needed
+npm pack                    # -> dsh-chat-manager-wide-1.5.0.tgz
+tar -tzf dsh-chat-manager-wide-1.5.0.tgz    # inspect the published file list (17 files)
+npm publish                 # unscoped name; 1.5.0 is a normal release, so no --tag is needed
 ```
 
-`1.4.1` carries no prerelease segment, so npm publishes it to `latest` and a bare
+`1.5.0` carries no prerelease segment, so npm publishes it to `latest` and a bare
 `dsh plugin --profile web add dsh-chat-manager-wide` resolves to it.
 
-When you later iterate with a prerelease version (for example `1.4.1-next.1`), a bare `npm publish`
+When you later iterate with a prerelease version (for example `1.5.1-next.1`), a bare `npm publish`
 fails with "You must specify a tag using --tag when publishing a prerelease version". Use
 `npm publish --tag next` for a channel, or `--tag latest` when a bare install should resolve to it.
 Note that `--tag next` leaves the package without a `latest` tag, so version-less installs fail until
@@ -119,23 +112,21 @@ npm view dsh-chat-manager-wide version dist-tags
 
 ## 3. Install it
 
-**Always remove the original first.** Both packages disable the official `ui-workspace` row and each
-inserts its own workspace row, and both register the same `/plugins/dsh-session-delete/*` routes.
-Installing them side by side gives you two workspace sidebars.
+**Always remove the original first.** Both packages register the same `/plugins/dsh-session-delete/*`
+routes, so installing them side by side gives you duplicate route registrations.
 
 ```sh
 dsh plugin --profile web remove dsh-chat-manager
 
 # from the registry:
-dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
 
-# or from the tarball, to test before publishing (absolute path or ./relative works;
-# this tree currently lives at the local checkout):
-dsh plugin --profile web add .\dsh-chat-manager-wide-1.4.1.tgz
+# or from the tarball, to test before publishing (absolute path or ./relative works)
+dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.0.tgz
 ```
 
 Then **restart DSH** — the host half (`src/`) is loaded at boot, so the archive-detail route does not
-exist until then — and refresh the Web UI for the rebuilt client bundle.
+exist until then — and refresh the Web UI for the new client module.
 
 Verify the profile without dumping its contents:
 
@@ -143,14 +134,16 @@ Verify the profile without dumping its contents:
 dsh plugin --profile web list dsh-chat-manager-wide --depth 0
 ```
 
-Acceptance in the UI: the sidebar archive action opens a wide dialog with the archived list on the
-left; clicking a row fills the right pane with that session's conversation.
+Acceptance in the UI: **Settings → Archived sessions** shows the list on the left and fills the right pane
+with a session's conversation when you select it; an archived session's "…" menu offers **View archived
+transcript** and the red **Delete session**; the official archive action, archived-row filter, and
+archived-content search still work.
 
 ## 4. Update flow
 
 ```sh
 # bump the version in package.json, then
-pnpm run build        # or: node scripts/build-client-local.mjs
+npm run build
 npm publish
 dsh plugin --profile web add dsh-chat-manager-wide@<new version>
 ```
@@ -167,9 +160,10 @@ dsh plugin --profile web add dsh-chat-manager@1.3.4
 ## Licensing
 
 * `LICENSE` is upstream's MIT license (Copyright (c) 2026 WSL043) and is kept unchanged — MIT
-  requires retaining it.
-* `THIRD_PARTY_NOTICES.md` carries both upstream notices: `dsh-chat-manager` and the
-  `@deepseek-ai/dsh-client-ui-workspace` build that every `lib/client.js` is derived from.
-* The composed bundle starts with an attribution header. Upstream's own artifact notice sat ahead of
-  `factory: (require) => {` and was silently dropped by the bundle extractor, so the fork emits its
-  own.
+  requires retaining it, because the host half is a modified fork of `dsh-chat-manager` 1.3.4.
+* `THIRD_PARTY_NOTICES.md` carries the `dsh-chat-manager` notice and keeps the
+  `@deepseek-ai/dsh-client-ui-workspace` notice for the **already published** 1.4.0/1.4.1 line. From
+  1.5.0 the distributed `lib/client.js` contains no upstream code, so no new attribution obligation
+  arises from it; the file states that explicitly.
+* The generated `lib/client.js` starts with a one-line attribution header. It is emitted by
+  `scripts/build-client.mjs`, so do not edit it by hand.

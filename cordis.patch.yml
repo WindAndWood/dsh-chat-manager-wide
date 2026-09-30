@@ -1,7 +1,11 @@
-# Replace the official workspace row only while this bundle is enabled.
-- id: ui-workspace
-  disabled: true
-
+# Route C: this bundle no longer replaces the official workspace row.
+#
+# The plugin ships an ordinary client half (`lib/client.js`) that registers into
+# official slots — `sidebar.workspaces.session.menu.item`, `settings.section`
+# (id `archived-sessions`) and `shell.overlay`. The official `ui-workspace` row
+# must stay enabled: disabling it would take the shipped archive UI with it.
+#
+# Only insert this bundle's own host half.
 - insert:
     - id: ui-workspace-session-delete
       name: dsh-chat-manager-wide

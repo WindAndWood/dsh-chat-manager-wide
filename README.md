@@ -1,13 +1,15 @@
 > **Fork 说明。** 本包 `dsh-chat-manager-wide` 是 [dsh-chat-manager](https://www.npmjs.com/package/dsh-chat-manager) 1.3.4(WSL043,MIT)的修改版:
-> 加宽了归档会话弹窗,并新增归档对话正文阅读。上游的 MIT 许可证与署名完整保留在
+> 从 1.5.0 起改为官方插槽插件,提供归档对话正文阅读与安全永久删除。上游的 MIT 许可证与署名完整保留在
 > [LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md);
 > 相对上游的变更清单见 [CHANGELOG.md](CHANGELOG.md),发布流程见 [PUBLISH.md](PUBLISH.md)。
-> 同一个 profile 里**不要**同时安装本包与原版 `dsh-chat-manager`,两者会各自插入一个工作区行。
+> 同一个 profile 里**不要**同时安装本包与原版 `dsh-chat-manager`,两者会注册同一批 `/plugins/dsh-session-delete/*` 路由。
 
 > [!NOTE]
-> 1.3.4：有官方归档设置页且 Portable 支持设置导航时，归档入口优先打开官方页面；旁边的搜索入口保留归档内容搜索与管理。旧环境继续使用原归档弹窗。
+> 1.5.0 起不再替换官方工作区客户端:插件只往官方预留的插槽里加东西 —— 设置里的 **已归档会话** 分节、
+> 会话「…」菜单里的 **查看归档正文** 与 **删除会话**,以及一个确认对话框。归档 / 取消归档、视图筛选、
+> 归档内容搜索仍由官方功能提供,插件不接管。
 >
-> 这是一个持续维护、可独立卸载的 DSH 插件。它补充归档浏览、聊天内容搜索、恢复与安全永久删除；不喜欢这套会话管理方式时，可以直接卸载，现有会话不会因此被删除。
+> 这是一个持续维护、可独立卸载的 DSH 插件。它补充归档正文阅读与安全永久删除；不喜欢这套会话管理方式时，可以直接卸载，现有会话不会因此被删除。
 
 <div align="center">
 
@@ -30,12 +32,12 @@ npm 包：[`dsh-chat-manager-wide`](https://www.npmjs.com/package/dsh-chat-manag
 
 | 归档可找回 | 聊天可搜索 | 删除更稳妥 |
 | --- | --- | --- |
-| 从侧边栏打开归档管理器，查看并恢复隐藏的会话 | 按会话名、工作区或用户与助手的聊天内容搜索归档 | 原生菜单保留二次确认；运行中的任务先安全停止，再删除本机会话记录 |
+| 在设置里打开「已归档会话」，阅读正文、恢复或清理 | 按会话名、工作区或用户与助手的聊天内容搜索归档 | 原生菜单保留二次确认；运行中的任务先安全停止，再删除本机会话记录 |
 
-**归档会话弹窗长什么样。** 点侧边栏标题区域的归档图标打开弹窗:它按 `min(1120px, 100%)` 铺开
-(官方 `Modal` 默认只有 `min(380px, 100%)`),内部是「左列表 + 右正文」的主从布局 —— 左栏是搜索框
-加归档会话列表,每行都可点选并保留「恢复 / 永久删除」;选中一行后,右栏直接显示该会话完整的
-用户 / 助手对话,带角色标签、时间、条数、内部滚动和「复制对话」。
+**归档正文界面长什么样。** 它按 `min(1120px, 100%)` 铺开（官方 `Modal` 默认只有 `min(380px, 100%)`），
+内部是「左列表 + 右正文」的主从布局 —— 左栏是搜索框加归档会话列表，每行都可点选并保留「恢复 / 永久删除」；
+选中一行后，右栏直接显示该会话完整的用户 / 助手对话，带角色标签、时间、条数、内部滚动和「复制对话」。
+同一份界面有两个入口：设置里的 **已归档会话** 分节，以及已归档会话行「…」菜单里的 **查看归档正文**。
 
 > [!NOTE]
 > 本分支尚未建立公开的源码仓库,因此这里不放界面截图;界面以上面这段文字为准。
@@ -45,7 +47,7 @@ npm 包：[`dsh-chat-manager-wide`](https://www.npmjs.com/package/dsh-chat-manag
 ### DSH 标准命令
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
 ```
 
 安装完成后，保存工作并按 DSH 的正常方式重启一次，使新的 bundle 配置生效。
@@ -59,7 +61,7 @@ dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
 
 ### 管理归档
 
-1. 点击侧边栏标题区域的归档图标，打开 **归档会话**。
+1. 打开 **设置 → 已归档会话**（或已归档会话行「…」菜单里的 **查看归档正文**），进入 **归档会话** 界面。
 2. 直接浏览全部归档，或按会话名、工作区和用户/助手聊天内容搜索。
 3. 点击 **恢复** 让会话回到原来的工作区位置；需要彻底清理时，可从同一列表进入永久删除确认。
 
@@ -99,18 +101,18 @@ dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
 ## 兼容性
 
 <!-- dsh-compatibility -->
-支持软件包元数据中记录的最新版 DeepSeek Harness（`0.1.5-rc.1`）。
+需要 DeepSeek Harness `0.2.0-rc.2`(插件在 `peerDependencies` 里按上游运行时版本精确声明)。
 <!-- /dsh-compatibility -->
 
 归档浏览、恢复和内容搜索使用 DSH 的工作区注册表与会话查询能力；永久删除适用于 DSH 默认的逐会话
-JSONL 存储。安装后替换为带会话管理功能的原生工作区列表；卸载后恢复 DSH 原有列表。
+JSONL 存储。插件**不**替换官方工作区客户端,只往官方插槽里追加自己的入口;卸载后这些入口消失,官方功能不受影响。
 
 ## 更新与卸载
 
 更新时继续用 DSH 标准命令安装目标 npm 版本。当前版本的命令是:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
 ```
 
 卸载只移除这个插件的 bundle 层，不删除任何会话：
@@ -128,4 +130,5 @@ DSH-Portable 同样使用标准的 `dsh plugin` 命令。完成安装、更新�
 [npm 包页面](https://www.npmjs.com/package/dsh-chat-manager-wide)确认版本，再通过该页面列出的
 维护者联系方式反馈可复现问题；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
 
-MIT。修改后的上游客户端及其许可说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+MIT。上游 `dsh-chat-manager` 的许可说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；
+1.4.x 曾分发官方工作区客户端的修改版,1.5.0 的分发物里已不含任何上游代码。

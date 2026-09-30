@@ -1,13 +1,16 @@
 > **Fork notice.** `dsh-chat-manager-wide` is a modified fork of
-> [dsh-chat-manager](https://www.npmjs.com/package/dsh-chat-manager) 1.3.4 by WSL043 (MIT):
-> the archived-session dialog is full width and archived conversations can be read in place.
-> Upstream's MIT license and attribution are kept in [LICENSE](LICENSE) and
+> [dsh-chat-manager](https://www.npmjs.com/package/dsh-chat-manager) 1.3.4 by WSL043 (MIT).
+> From 1.5.0 it is an official-slot plugin that reads archived conversations in place and permanently
+> deletes sessions. Upstream's MIT license and attribution are kept in [LICENSE](LICENSE) and
 > [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); see [CHANGELOG.md](CHANGELOG.md) for the delta and
 > [PUBLISH.md](PUBLISH.md) for the release flow.
-> Do **not** install this package and the original `dsh-chat-manager` in the same profile; each one
-> inserts its own workspace row.
+> Do **not** install this package and the original `dsh-chat-manager` in the same profile; both register
+> the same `/plugins/dsh-session-delete/*` routes.
 
-> Version 1.3.4: When the official archive section and Portable settings navigation are available, the archive button opens the official page; the adjacent search button retains content search and management. Older hosts retain the existing archive dialog.
+> Version 1.5.0: the plugin no longer replaces the official workspace client. It only adds to reserved
+> official slots — a **Archived sessions** section in Settings, **View archived transcript** and
+> **Delete session** rows in a session's "…" menu, and one confirmation dialog. Archiving, unarchiving,
+> the archived-row filter, and archived-content search stay with the official implementation.
 
 > [!NOTE]
 > This is an actively maintained, independently removable DSH plugin. It adds archive browsing, conversation-content search, restore, and safe permanent deletion. If this session workflow is not for you, uninstalling the plugin leaves existing sessions untouched.
@@ -33,14 +36,15 @@ Archive manager · Conversation search · One-click restore · Safe permanent de
 
 | Recover archives | Search conversations | Delete safely |
 | --- | --- | --- |
-| Open the archive manager from the sidebar and restore hidden sessions | Search archived names, workspaces, and user/assistant conversation content | Keep native second confirmation; running work is stopped safely before local records are removed |
+| Open **Archived sessions** in Settings to read, restore, or clean up hidden sessions | Search archived names, workspaces, and user/assistant conversation content | Keep native second confirmation; running work is stopped safely before local records are removed |
 
-**What the archived-sessions dialog looks like.** The archive icon in the sidebar header opens a dialog
-that spans `min(1120px, 100%)` (the shared `Modal` default is only `min(380px, 100%)`) and lays out as a
-master/detail browser: the left pane holds the search box and the archived session list, where every row
-is selectable and keeps its Restore / Delete actions; selecting a row fills the right pane with that
-session's complete user/assistant transcript, including role labels, timestamps, a message count,
-internal scrolling, and a "copy conversation" action.
+**What the transcript browser looks like.** It spans `min(1120px, 100%)` (the shared `Modal` default is
+only `min(380px, 100%)`) and lays out as a master/detail browser: the left pane holds the search box and
+the archived session list, where every row is selectable and keeps its Restore / Delete actions; selecting
+a row fills the right pane with that session's complete user/assistant transcript, including role labels,
+timestamps, a message count, internal scrolling, and a "copy conversation" action. The same surface has two
+entry points: the **Archived sessions** section in Settings, and **View archived transcript** in an
+archived row's "…" menu.
 
 > [!NOTE]
 > This fork has no public source repository yet, so this README ships without interface screenshots;
@@ -51,7 +55,7 @@ internal scrolling, and a "copy conversation" action.
 ### Standard DSH command
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
 ```
 
 When the command finishes, save your work and restart DSH once through its normal workflow so the new
@@ -67,7 +71,7 @@ npm; do not substitute an online document for it.
 
 ### Manage archives
 
-1. Select the archive icon in the sidebar header to open **Archived sessions**.
+1. Open **Settings → Archived sessions** (or **View archived transcript** in an archived row's "…" menu).
 2. Browse every archive or search by session name, workspace, and user/assistant conversation content.
 3. Select **Restore** to return a session to its original workspace position. To remove it completely,
    start the permanent-delete confirmation from the same list.
@@ -113,19 +117,21 @@ without warranty.
 ## Compatibility
 
 <!-- dsh-compatibility -->
-Supports the latest DeepSeek Harness release recorded in the package metadata (`0.1.5-rc.1`).
+Requires DeepSeek Harness `0.2.0-rc.2` — declared exactly as the upstream runtime version in
+`peerDependencies`.
 <!-- /dsh-compatibility -->
 
 Archive browsing, restore, and content search use DSH's workspace registry and session-query capabilities.
-Permanent deletion supports DSH's default per-session JSONL storage. Installing replaces the native workspace
-list with the session-management version; uninstalling restores DSH's original list.
+Permanent deletion supports DSH's default per-session JSONL storage. The plugin does **not** replace the
+official workspace client; it only appends its own entries to official slots, so uninstalling removes those
+entries and leaves the official features untouched.
 
 ## Update and uninstall
 
 Install the target npm version with the same standard DSH command. For the current version:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.4.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
 ```
 
 Uninstall removes only this plugin's bundle layer and never deletes sessions:

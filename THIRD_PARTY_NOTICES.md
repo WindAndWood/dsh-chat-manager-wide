@@ -2,10 +2,11 @@
 
 ## @deepseek-ai/dsh-client-ui-workspace
 
-The distributed `lib/client.js` is a modified build of
-`@deepseek-ai/dsh-client-ui-workspace` version `0.1.5-rc.1`. The patch source is
-available in `scripts/build-client.mjs`, and the composed bundle starts with an
-attribution header pointing back to this file.
+**1.5.0 and later distribute no upstream code.** `lib/client.js` is this package's own browser module; it
+uses the public DeepSeek Harness slot API (`settings.section`, `sidebar.workspaces.session.menu.item`,
+`shell.overlay`) and copies no byte of `@deepseek-ai/dsh-client-ui-workspace`. The notice below is kept
+because the published `1.4.0`/`1.4.1` line **did** distribute a modified build of that package (version
+`0.1.5-rc.1`), and those versions remain available on npm.
 
 DeepSeek Harness is licensed under the MIT License:
 

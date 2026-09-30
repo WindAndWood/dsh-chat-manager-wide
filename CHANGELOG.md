@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.5.0
+
+Route C: the plugin is rebuilt as an **official-slot plugin** for DSH `0.2.0-rc.2`. It no longer replaces
+the official workspace client, so it no longer drifts with upstream UI changes.
+
+### Changed — architecture
+
+* `lib/client.js` is now this package's own small browser module (37,185 bytes) that registers into three
+  official slots instead of a 303,999-byte modified build of `@deepseek-ai/dsh-client-ui-workspace`:
+  * `settings.section` with id `archived-sessions` — the seat the official settings navigation already
+    reserved (including its archive icon); the left-list/right-transcript browser lives here.
+  * `sidebar.workspaces.session.menu.item` — **View archived transcript** (order 500, shown only for an
+    archived row, which the official UI refuses to open) and the red **Delete session** (order 510).
+  * `shell.overlay` — the wide transcript dialog and the two-step permanent-deletion confirmation.
+* `cordis.patch.yml` no longer disables the official `ui-workspace` row; it only inserts this bundle. The
+  official archive/unarchive actions, the archived-row filter, and archived-content search keep working.
+* `peerDependencies` are re-pinned to the runtime the plugin is built for. The peer gate compares every
+  `@deepseek-ai/dsh-*` peer against the **dsh runtime version**, so `0.2.0-rc.2` is the exact claim and a
+  future runtime fails loudly instead of loading an unverified client.
+
+### Removed
+
+* `compatibility.json` — no upstream client version matrix any more.
+* `scripts/build-client-local.mjs` and the 20+ `replaceOnce` anchors of the old `scripts/build-client.mjs`.
+  The new composer only wraps `src/client/factory.js` and derives the module id from `package.json#name`.
+* All fixture `devDependencies` (11 workspace fixtures, `playwright`), the `clsx` runtime dependency, and
+  `pnpm-lock.yaml`.
+* `scripts/smoke-ui.mjs` — it drove the removed sidebar archive button. Its non-destructive intent is now
+  covered by `_work/verify/verify-client.mjs`; live-UI acceptance is a manual checklist in `AGENTS.md`.
+* The test scripts that pointed at a `tests/` directory this repository never had.
+
+### Kept
+
+* `src/host/archive-manager.mjs` (including the archived-transcript reader and its 4000/40,000/4 MiB
+  limits), `src/host/delete-session.mjs`, and the four `/plugins/dsh-session-delete/*` routes.
+* The wide `min(1120px, 100%)` master/detail layout and its copy-conversation, truncation, restore and
+  delete affordances; the task name is still shown before the second confirmation.
+* Upstream `dsh-chat-manager` MIT attribution in `LICENSE` and `THIRD_PARTY_NOTICES.md`.
+
+### Verification
+
+* `_work/verify/verify-host.mjs` — 20/20 host assertions pass.
+* `_work/verify/verify-client.mjs` — 84/84 new browser-half assertions pass (slot ids and orders, locale
+  dictionary balance and coverage, hook-order stability across re-renders, and the contract that a
+  cancelled confirmation sends **no** delete request).
+* `_work/verify/verify-package.mjs` — the real `evaluatePluginCompatibility` from the installed dsh accepts
+  the package, the published file list is complete, and `lib/client.js` rebuilds byte-for-byte.
+* `_work/verify/verify-profile.mjs` — the profile loader `dsh web` uses composes the installed 1.5.0 bundle
+  with no skipped bundle while `@deepseek-ai/dsh-web-app` still loads.
+
 ## 1.4.1
 
 Documentation and package-metadata release. `lib/client.js` and the host half (`src/`) are unchanged
