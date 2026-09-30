@@ -25,8 +25,9 @@ npm 包：[`dsh-chat-manager-wide`](https://www.npmjs.com/package/dsh-chat-manag
 [![npm 总下载量](https://img.shields.io/npm/dt/dsh-chat-manager-wide?style=flat-square&label=%E6%80%BB%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://www.npmjs.com/package/dsh-chat-manager-wide)
 [![DSH](https://img.shields.io/badge/DSH-compatible-2f81f7?style=flat-square)](#兼容性)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![GitHub](https://img.shields.io/github/stars/WindAndWood/dsh-chat-manager-wide?style=flat-square)](https://github.com/WindAndWood/dsh-chat-manager-wide)
 
-[English](README.en.md) · [安装](#安装) · [使用](#使用) · [安全边界](#安全边界)
+[English](README.en.md) · [安装](#安装) · [使用](#使用) · [安全边界](#安全边界) · [源码仓库](https://github.com/WindAndWood/dsh-chat-manager-wide)
 
 </div>
 
@@ -47,8 +48,15 @@ DSH 自动读取的文档（`AGENTS.md`、技能内容、运行时上下文等�
 同一天的消息之间有一条日期分隔线。同一份界面有两个入口：设置里的 **已归档会话** 分节，
 以及已归档会话行「…」菜单里的 **查看归档正文**。
 
-> [!NOTE]
-> 本分支尚未建立公开的源码仓库,因此这里不放界面截图;界面以上面这段文字为准。
+**两个入口。** 设置里的 **已归档会话** 分节；归档会话行「…」菜单里的 **查看归档正文** 与 **删除会话**：
+
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/menu-entries.png" alt="会话行「…」菜单：查看归档正文 / 删除会话" width="393">
+
+**归档正文与内容检索：**
+
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-transcript.png" alt="归档会话：左列表 + 右正文，系统注入折叠、工具调用成卡片" width="1103">
+
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="归档内容检索：命中计数、框选首条命中、摘要高亮" width="1104">
 
 ## 安装
 
@@ -134,9 +142,8 @@ DSH-Portable 同样使用标准的 `dsh plugin` 命令。完成安装、更新�
 
 ## 支持与许可证
 
-本分支还没有公开的源码仓库，因此暂时没有 issue 表单。请先在
-[npm 包页面](https://www.npmjs.com/package/dsh-chat-manager-wide)确认版本，再通过该页面列出的
-维护者联系方式反馈可复现问题；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
+可复现问题请开 [issue](https://github.com/WindAndWood/dsh-chat-manager-wide/issues)（附上 DSH 版本、
+插件版本与重现步骤）；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
 
 MIT。上游 `dsh-chat-manager` 的许可说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；
 1.4.x 曾分发官方工作区客户端的修改版,1.5.0 的分发物里已不含任何上游代码。

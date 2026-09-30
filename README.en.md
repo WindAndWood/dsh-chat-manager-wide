@@ -29,8 +29,9 @@ Archive manager · Conversation search · One-click restore · Safe permanent de
 [![total npm downloads](https://img.shields.io/npm/dt/dsh-chat-manager-wide?style=flat-square&label=total%20downloads)](https://www.npmjs.com/package/dsh-chat-manager-wide)
 [![DSH](https://img.shields.io/badge/DSH-compatible-2f81f7?style=flat-square)](#compatibility)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![GitHub](https://img.shields.io/github/stars/WindAndWood/dsh-chat-manager-wide?style=flat-square)](https://github.com/WindAndWood/dsh-chat-manager-wide)
 
-[中文](README.md) · [Install](#install) · [Use](#use) · [Safety boundary](#safety-boundary)
+[中文](README.md) · [Install](#install) · [Use](#use) · [Safety boundary](#safety-boundary) · [Source](https://github.com/WindAndWood/dsh-chat-manager-wide)
 
 </div>
 
@@ -54,9 +55,16 @@ Search counts its matches, scrolls to and outlines the first matching turn, high
 in both panes, and a date line separates days. The same surface has two entry points: the **Archived
 sessions** section in Settings, and **View archived transcript** in an archived row's "…" menu.
 
-> [!NOTE]
-> This fork has no public source repository yet, so this README ships without interface screenshots;
-> the paragraph above is the description of record.
+**Two entry points.** The **Archived sessions** section in Settings, and **View archived transcript** /
+**Delete session** in an archived row's "…" menu:
+
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/menu-entries.png" alt="Session row menu: View archived transcript / Delete session" width="393">
+
+**Transcript and content search:**
+
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-transcript.png" alt="Archived sessions: list on the left, transcript on the right, folded injections and tool cards" width="1103">
+
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="Archived content search: match count, outlined first hit, highlighted snippet" width="1104">
 
 ## Install
 
@@ -153,10 +161,9 @@ after installing, updating, or uninstalling so the configuration is recomposed.
 
 ## Support and license
 
-This fork has no public source repository yet, so there is no issue form. Check the version on the
-[npm package page](https://www.npmjs.com/package/dsh-chat-manager-wide) first, then report a
-reproducible problem through the maintainer contact listed there. Report security issues privately as
+Report a reproducible problem in the [issue tracker](https://github.com/WindAndWood/dsh-chat-manager-wide/issues)
+(include the DSH version, the plugin version and the steps). Report security issues privately as
 described in [SECURITY.md](SECURITY.md).
 
-MIT. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the modified upstream client and its license
-notice.
+MIT. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the upstream notices; the 1.4.x line shipped
+a modified official workspace client, while 1.5.0 distributes no upstream code.

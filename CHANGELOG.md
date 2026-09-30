@@ -20,6 +20,15 @@ the official workspace client, so it no longer drifts with upstream UI changes.
   `@deepseek-ai/dsh-*` peer against the **dsh runtime version**, so `0.2.0-rc.2` is the exact claim and a
   future runtime fails loudly instead of loading an unverified client.
 
+### Added
+
+* A public source repository: <https://github.com/WindAndWood/dsh-chat-manager-wide>. `package.json` now
+  carries `repository` / `bugs` / `homepage`, `SECURITY.md` points at GitHub's private vulnerability
+  report form, and the READMEs link the repository and its issue tracker instead of saying none exists.
+* Three interface screenshots under `docs/assets/` (`menu-entries.png`, `archive-transcript.png`,
+  `archive-search.png`), referenced from both READMEs by absolute `raw.githubusercontent.com` URLs and
+  shipped in the tarball so other viewers can reach them too.
+
 ### Changed — archived transcript
 
 * The detail route now reads `sessionQuery.readSurface()` instead of `filterEvents()`, so the Host returns

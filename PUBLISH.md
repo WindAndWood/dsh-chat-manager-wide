@@ -6,16 +6,19 @@ artifact (`npm run build`), so the two are always in sync.
 
 ## 0. Before publishing
 
-1. **Package metadata.** `author` is set (`windandwood <liangjinzhou22@qq.com>`). `repository`, `bugs`
-   and `homepage` stay unset on purpose: this fork has no public source repository yet, and a fork must
-   not advertise upstream's coordinates. Add those three fields in the same change that creates the
-   repository, then rebuild and republish.
-2. **Upstream links are already rebranded (1.5.0).** `README.md` and `README.en.md` now carry only the
-   npm version and download badges plus the DSH compatibility and static MIT license badges. Upstream's
-   GitHub release / checks / license / stars badges, the Awesome DSH listing, the image-viewer link, both
-   issue-form links and all three `raw.githubusercontent.com/WSL043/...` screenshots are gone, and the
-   screenshots are replaced by written interface descriptions. When you have your own captures, put them
-   under `docs/assets/`, add that path to `files` in `package.json`, and restore the `<img>` blocks.
+1. **Package metadata.** `author` is set (`windandwood <liangjinzhou22@qq.com>`), and
+   `repository` / `bugs` / `homepage` point at
+   [WindAndWood/dsh-chat-manager-wide](https://github.com/WindAndWood/dsh-chat-manager-wide). These three
+   fields are frozen into the registry by the release that publishes them, so change them **before**
+   `npm publish`, never after; a later correction needs a new version.
+2. **Badges and screenshots (1.5.0).** `README.md` and `README.en.md` carry the npm version and download
+   badges, the DSH compatibility badge, the static MIT license badge and this repository's stars badge.
+   Upstream's GitHub release / checks / license / stars badges, the Awesome DSH listing, the image-viewer
+   link and both upstream issue-form links are gone. The three interface screenshots live in `docs/assets/`
+   (`menu-entries.png`, `archive-transcript.png`, `archive-search.png`) and are referenced by absolute
+   `raw.githubusercontent.com` URLs, so they render on GitHub **and** on npmjs; `docs/assets` is also in
+   `files` so the tarball stays self-contained for other viewers. Note that `raw.githubusercontent.com`
+   can be unreachable from mainland China, where the mirror's README page will show broken images.
 3. **Publish to npmjs.org, not to your mirror.** `~/.npmrc` on this machine sets
    `registry=https://registry.npmmirror.com`, which is a read-only mirror — publishing there fails.
    `package.json` therefore pins `publishConfig.registry` to `https://registry.npmjs.org/`, which npm
@@ -31,14 +34,15 @@ artifact (`npm run build`), so the two are always in sync.
    ```
    `1.4.0` is the only published version so far; `1.4.1` was prepared and then abandoned in favour of
    this route C release, so do not publish `1.4.1`.
-5. **Put it in git:**
+5. **Put it in git.** The repository already exists and is initialized; publish from a clean tree:
    ```sh
-   git init
-   git add .
-   git commit -m "dsh-chat-manager-wide 1.5.0"
-   git remote add origin <your repository>
-   git push -u origin main
+   git status                    # must be clean
+   git remote -v                 # origin -> WindAndWood/dsh-chat-manager-wide
+   git tag -a v1.5.0 -m "dsh-chat-manager-wide 1.5.0"
+   git push origin main --follow-tags
    ```
+   `.gitattributes` pins `* text=auto eol=lf`, so a checkout/rollback keeps `lib/client.js` byte-exact
+   (verified with a real worktree rollback in the 1.4.x line).
 
 **2FA is mandatory for the write.** An account with two-factor authentication that logs in through the
 browser flow (`Logged in on https://registry.npmjs.org/`) can still be refused at publish time:

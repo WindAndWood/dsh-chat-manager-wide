@@ -17,6 +17,7 @@
     "src/index.js",
     "src/host/archive-manager.mjs",
     "src/host/delete-session.mjs",
+    "docs/assets",
     "README.md",
     "README.zh-CN.md",
     "README.en.md",
@@ -67,6 +68,14 @@
     "conversation-viewer"
   ],
   "author": "windandwood <liangjinzhou22@qq.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WindAndWood/dsh-chat-manager-wide.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WindAndWood/dsh-chat-manager-wide/issues"
+  },
+  "homepage": "https://github.com/WindAndWood/dsh-chat-manager-wide#readme",
   "license": "MIT",
   "publishConfig": {
     "access": "public",
