@@ -67,7 +67,7 @@ DSH 自动读取的文档（`AGENTS.md`、技能内容、运行时上下文等�
 ### DSH 标准命令
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
 ```
 
 安装完成后，保存工作并按 DSH 的正常方式重启一次，使新的 bundle 配置生效。
@@ -132,7 +132,7 @@ JSONL 存储。插件**不**替换官方工作区客户端,只往官方插槽里
 更新时继续用 DSH 标准命令安装目标 npm 版本。当前版本的命令是:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
 ```
 
 卸载只移除这个插件的 bundle 层，不删除任何会话：

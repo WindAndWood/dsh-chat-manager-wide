@@ -38,7 +38,7 @@ artifact (`npm run build`), so the two are always in sync.
    ```sh
    git status                    # must be clean
    git remote -v                 # origin -> WindAndWood/dsh-chat-manager-wide
-   git tag -a v1.5.0 -m "dsh-chat-manager-wide 1.5.0"
+   git tag -a v1.5.1 -m "dsh-chat-manager-wide 1.5.1"
    git push origin main --follow-tags
    ```
    `.gitattributes` pins `* text=auto eol=lf`, so a checkout/rollback keeps `lib/client.js` byte-exact
@@ -94,12 +94,12 @@ node -e "const s=require('fs').readFileSync('lib/client.js','utf8');console.log(
 ## 2. Dry run, then publish
 
 ```sh
-npm pack                    # -> dsh-chat-manager-wide-1.5.0.tgz
-tar -tzf dsh-chat-manager-wide-1.5.0.tgz    # inspect the published file list (17 files)
-npm publish                 # unscoped name; 1.5.0 is a normal release, so no --tag is needed
+npm pack                    # -> dsh-chat-manager-wide-1.5.1.tgz
+tar -tzf dsh-chat-manager-wide-1.5.1.tgz    # inspect the published file list (21 files)
+npm publish                 # unscoped name; 1.5.1 is a normal release, so no --tag is needed
 ```
 
-`1.5.0` carries no prerelease segment, so npm publishes it to `latest` and a bare
+`1.5.1` carries no prerelease segment, so npm publishes it to `latest` and a bare
 `dsh plugin --profile web add dsh-chat-manager-wide` resolves to it.
 
 When you later iterate with a prerelease version (for example `1.5.1-next.1`), a bare `npm publish`
@@ -123,10 +123,10 @@ routes, so installing them side by side gives you duplicate route registrations.
 dsh plugin --profile web remove dsh-chat-manager
 
 # from the registry:
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
 
 # or from the tarball, to test before publishing (absolute path or ./relative works)
-dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.0.tgz
+dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.1.tgz
 ```
 
 Then **restart DSH** — the host half (`src/`) is loaded at boot, so the archive-detail route does not

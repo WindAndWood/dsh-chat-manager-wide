@@ -1,5 +1,5 @@
 > **Fork note.** This is the `dsh-chat-manager-wide` fork. Every command and package spec in this
-> document already points at `dsh-chat-manager-wide@1.5.0`. Do not install it next to the
+> document already points at `dsh-chat-manager-wide@1.5.1`. Do not install it next to the
 > original `dsh-chat-manager` in one profile.
 
 # Agent installation guide
@@ -10,7 +10,7 @@ or remove `dsh-chat-manager-wide` in a selected DeepSeek Harness profile.
 ## Safety and responsibility boundary
 
 - Confirm the target DSH installation and profile. Use `web` only when it is the user's target.
-- Use the fixed `dsh-chat-manager-wide@1.5.0` package below; never substitute a moving branch or an
+- Use the fixed `dsh-chat-manager-wide@1.5.1` package below; never substitute a moving branch or an
   unreviewed source.
 - Do not print session contents, full profile files, transcript paths, credentials, or other private data.
 - Do not start, stop, or restart DSH without explicit permission.
@@ -30,7 +30,7 @@ requirements. A cancelled confirmation is the safe default and must not send a d
 The `dsh-chat-manager-wide` package is a standard DSH bundle (a fork of `dsh-chat-manager` 1.3.4) with a `dsh.bundle` profile patch. Its exact package spec is:
 
 ```text
-dsh-chat-manager-wide@1.5.0
+dsh-chat-manager-wide@1.5.1
 ```
 
 Since 1.5.0 the bundle no longer disables or replaces the official workspace row. Its client half is a small
@@ -63,7 +63,7 @@ record the selected profile's relevant metadata before invoking it, without prin
 With an existing `dsh` command, run exactly:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
 ```
 
 Use the same `add` command to update or repair. The DSH CLI owns target selection, dependency resolution,
@@ -81,7 +81,7 @@ dsh plugin --profile web list dsh-chat-manager-wide --depth 0
 ```
 
 1. The `dsh-chat-manager-wide` bundle appears exactly once in the requested profile.
-2. Its direct package spec is the fixed `dsh-chat-manager-wide@1.5.0` npm version above.
+2. Its direct package spec is the fixed `dsh-chat-manager-wide@1.5.1` npm version above.
 3. The profile contains the bundle patch, and the official `@deepseek-ai/dsh-web-app` bundle is still
    composed (this plugin must not skip or shadow it).
 4. No unrelated dependency, profile patch, or session data was changed by the operation.

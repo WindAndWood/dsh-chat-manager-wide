@@ -1,3 +1,5 @@
+import { judgeJsonPost } from './same-origin.mjs'
+
 const SEARCH_LIMIT = 20
 const MESSAGE_TYPES = new Set(['user/message', 'assistant/message'])
 const MAX_REQUEST_BYTES = 8 * 1024
@@ -522,22 +524,20 @@ const readJsonBody = async req => {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'))
 }
 
-const acceptJsonPost = (req, res) => {
-  if (req.method !== 'POST') {
-    sendJson(res, 405, failure('method-not-allowed', '只允许使用 POST 管理归档会话。'))
-    return false
-  }
-  const host = req.headers.host
-  if (typeof host !== 'string' || req.headers.origin !== `http://${host}`) {
-    sendJson(res, 403, failure('forbidden', '归档管理请求未通过同源校验。'))
-    return false
-  }
-  const contentType = req.headers['content-type']
-  if (typeof contentType !== 'string' || !contentType.toLowerCase().startsWith('application/json')) {
-    sendJson(res, 415, failure('unsupported-media-type', '归档管理请求必须使用 JSON。'))
-    return false
-  }
-  return true
+/** Required plugin header per route; `undefined` keeps the strict same-origin path only. */
+const DETAIL_ACTION = 'read-archive-detail'
+const SEARCH_ACTION = 'search-archive-content'
+const RESTORE_ACTION = 'restore-session'
+
+const acceptJsonPost = (req, res, action) => {
+  const verdict = judgeJsonPost(req, {
+    header: 'x-dsh-session-manager-action',
+    value: action,
+    forbiddenMessage: '归档管理请求未通过来源校验。',
+  })
+  if (verdict.ok) return true
+  sendJson(res, verdict.status, failure(verdict.code, verdict.message))
+  return false
 }
 
 const parseBody = async (req, res) => {
@@ -558,11 +558,7 @@ const parseBody = async (req, res) => {
 export function createArchiveRequestHandlers({ restore, search, detail, warn = console.warn }) {
   return {
     restore: async (req, res) => {
-      if (!acceptJsonPost(req, res)) return
-      if (req.headers['x-dsh-session-manager-action'] !== 'restore-session') {
-        sendJson(res, 403, failure('forbidden', '恢复请求缺少明确的操作标记。'))
-        return
-      }
+      if (!acceptJsonPost(req, res, RESTORE_ACTION)) return
       const body = await parseBody(req, res)
       if (body === undefined) return
       try {
@@ -577,7 +573,7 @@ export function createArchiveRequestHandlers({ restore, search, detail, warn = c
       }
     },
     detail: async (req, res) => {
-      if (!acceptJsonPost(req, res)) return
+      if (!acceptJsonPost(req, res, DETAIL_ACTION)) return
       const body = await parseBody(req, res)
       if (body === undefined) return
       try {
@@ -593,7 +589,7 @@ export function createArchiveRequestHandlers({ restore, search, detail, warn = c
       }
     },
     search: async (req, res) => {
-      if (!acceptJsonPost(req, res)) return
+      if (!acceptJsonPost(req, res, SEARCH_ACTION)) return
       const body = await parseBody(req, res)
       if (body === undefined) return
       const query = typeof body?.query === 'string' ? body.query.trim() : ''

@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.5.1
+
+Fix: every archived-session route was unreachable in the **Desktop application**.
+
+### Fixed
+
+* The Host gate demanded `Origin === http://<Host>` exactly. That holds for `dsh web`, whose page is served
+  from the same origin, but the Desktop application serves this UI from its own `dsh-app://app/` scheme and
+  forwards plugin calls to the local server, so its requests carry an opaque page origin and all four
+  `/plugins/dsh-session-delete/*` routes answered 403 — reading a transcript, content search, restore, and
+  permanent deletion were all dead there while they worked in `dsh web`.
+* The gate now lives in one place (`src/host/same-origin.mjs`) and accepts either a strict same-origin web
+  request, or a request carrying this plugin's own action header from an opaque or loopback page origin. A
+  cross-site page cannot add a custom header without a CORS preflight this server never approves, so the
+  header is the real CSRF gate: a public site origin is still refused even with the header, and a loopback
+  origin must also match the request's port.
+* Each route now sends and requires its own action header — `read-archive-detail`, `search-archive-content`,
+  `restore-session`, and the existing `delete-session` confirmation. A plain web client still passes without
+  any header (strict same-origin), so a browser holding the previous client module keeps working against the
+  new Host half.
+* The refusal message now names the observed `origin` and `host`, so a future mismatch reports its own
+  evidence instead of requiring a debugging session.
+
+### Verification
+
+* Assertions across the four suites (host 79, client 146, package 28, profile 13), including the Desktop
+  shell origin, a `null`/absent origin, the `localhost`-vs-`127.0.0.1` alias, a public site origin, a
+  differing port, and the existing cancel-sends-nothing contract.
+
 ## 1.5.0
 
 Route C: the plugin is rebuilt as an **official-slot plugin** for DSH `0.2.0-rc.2`. It no longer replaces

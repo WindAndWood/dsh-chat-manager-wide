@@ -75,7 +75,7 @@ sessions** section in Settings, and **View archived transcript** in an archived 
 ### Standard DSH command
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
 ```
 
 When the command finishes, save your work and restart DSH once through its normal workflow so the new
@@ -151,7 +151,7 @@ entries and leaves the official features untouched.
 Install the target npm version with the same standard DSH command. For the current version:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.0
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
 ```
 
 Uninstall removes only this plugin's bundle layer and never deletes sessions:

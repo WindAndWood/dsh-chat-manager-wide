@@ -1,6 +1,6 @@
 {
   "name": "dsh-chat-manager-wide",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "DeepSeek Harness session management (unofficial fork of dsh-chat-manager, not affiliated with DeepSeek or the upstream author): an official-slot plugin for dsh >= 0.2.0-rc.2 that reads archived conversations in place and permanently deletes sessions",
   "type": "module",
   "main": "./src/index.js",
@@ -17,6 +17,7 @@
     "src/index.js",
     "src/host/archive-manager.mjs",
     "src/host/delete-session.mjs",
+    "src/host/same-origin.mjs",
     "docs/assets",
     "README.md",
     "README.zh-CN.md",
