@@ -64,12 +64,14 @@ DSH 自动读取的文档（`AGENTS.md`、技能内容、运行时上下文等�
 
 <img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="归档内容检索：命中计数、框选首条命中、摘要高亮" width="1104">
 
+> 界面截图中的真实会话名称、工作区与对话内容均已做脱敏遮盖。
+
 ## 安装
 
 ### DSH 标准命令
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.3
 ```
 
 安装完成后，保存工作并按 DSH 的正常方式重启一次，使新的 bundle 配置生效。
@@ -136,7 +138,7 @@ JSONL 存储。插件**不**替换官方工作区客户端,只往官方插槽里
 更新时继续用 DSH 标准命令安装目标 npm 版本。当前版本的命令是:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.3
 ```
 
 卸载只移除这个插件的 bundle 层，不删除任何会话：

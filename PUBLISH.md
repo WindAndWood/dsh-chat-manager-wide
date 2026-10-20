@@ -19,6 +19,11 @@ artifact (`npm run build`), so the two are always in sync.
    `raw.githubusercontent.com` URLs, so they render on GitHub **and** on npmjs; `docs/assets` is also in
    `files` so the tarball stays self-contained for other viewers. Note that `raw.githubusercontent.com`
    can be unreachable from mainland China, where the mirror's README page will show broken images.
+   **Privacy: every screenshot must be redacted before it enters `docs/assets/`.** Mask real session
+   names, workspace names, search queries, user prompts and transcript lines (see `1.5.3`); the repository's
+   images are fetched live by the npm README pages of *all* published versions, so replacing them in
+   `main` also updates the old versions' pages. Tarballs of already-published versions cannot be changed —
+   deprecate those versions instead (`npm deprecate dsh-chat-manager-wide@1.5.2 "..."`).
 3. **Publish to npmjs.org, not to your mirror.** `~/.npmrc` on this machine sets
    `registry=https://registry.npmmirror.com`, which is a read-only mirror — publishing there fails.
    `package.json` therefore pins `publishConfig.registry` to `https://registry.npmjs.org/`, which npm
@@ -32,13 +37,13 @@ artifact (`npm run build`), so the two are always in sync.
    ```sh
    npm view dsh-chat-manager-wide versions --registry https://registry.npmjs.org
    ```
-   Published so far: `1.4.0`, `1.5.0`, and `1.5.1`. `1.4.1` was prepared and then abandoned in favour
-   of the route C release, so do not publish `1.4.1`.
+   Published so far: `1.4.0`, `1.5.0`, `1.5.1`, `1.5.2`, and `1.5.3`. `1.4.1` was prepared and then
+   abandoned in favour of the route C release, so do not publish `1.4.1`.
 5. **Put it in git.** The repository already exists and is initialized; publish from a clean tree:
    ```sh
    git status                    # must be clean
    git remote -v                 # origin -> WindAndWood/dsh-chat-manager-wide
-   git tag -a v1.5.2 -m "dsh-chat-manager-wide 1.5.2"
+   git tag -a v1.5.3 -m "dsh-chat-manager-wide 1.5.3"
    git push origin main --follow-tags
    ```
    `.gitattributes` pins `* text=auto eol=lf`, so a checkout/rollback keeps `lib/client.js` byte-exact
@@ -99,15 +104,15 @@ node -e "const s=require('fs').readFileSync('lib/client.js','utf8');console.log(
 ## 2. Dry run, then publish
 
 ```sh
-npm pack                    # -> dsh-chat-manager-wide-1.5.2.tgz
-tar -tzf dsh-chat-manager-wide-1.5.2.tgz    # inspect the published file list (21 files)
-npm publish                 # unscoped name; 1.5.2 is a normal release, so no --tag is needed
+npm pack                    # -> dsh-chat-manager-wide-1.5.3.tgz
+tar -tzf dsh-chat-manager-wide-1.5.3.tgz    # inspect the published file list (21 files)
+npm publish                 # unscoped name; 1.5.3 is a normal release, so no --tag is needed
 ```
 
-`1.5.2` carries no prerelease segment, so npm publishes it to `latest` and a bare
+`1.5.3` carries no prerelease segment, so npm publishes it to `latest` and a bare
 `dsh plugin --profile web add dsh-chat-manager-wide` resolves to it.
 
-When you later iterate with a prerelease version (for example `1.5.2-next.1`), a bare `npm publish`
+When you later iterate with a prerelease version (for example `1.5.3-next.1`), a bare `npm publish`
 fails with "You must specify a tag using --tag when publishing a prerelease version". Use
 `npm publish --tag next` for a channel, or `--tag latest` when a bare install should resolve to it.
 Note that `--tag next` leaves the package without a `latest` tag, so version-less installs fail until
@@ -128,10 +133,10 @@ routes, so installing them side by side gives you duplicate route registrations.
 dsh plugin --profile web remove dsh-chat-manager
 
 # from the registry:
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.3
 
 # or from the tarball, to test before publishing (absolute path or ./relative works)
-dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.2.tgz
+dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.3.tgz
 ```
 
 Then **restart DSH** — the host half (`src/`) is loaded at boot, so the archive-detail route does not

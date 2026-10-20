@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.5.3
+
+Privacy release: the bundled README screenshots no longer show real session data.
+
+### Changed
+
+* The three screenshots in `docs/assets/` (`menu-entries.png`, `archive-transcript.png`,
+  `archive-search.png`) now mask every real session title, workspace name, search query, user prompt and
+  transcript line behind neutral blocks labelled "对话内容已脱敏 / redacted". The UI chrome, layout,
+  buttons and the plugin's menu rows stay readable.
+* The README image URLs point at `main` in the repository, so the redacted files also replace the
+  screenshots shown on the npm pages of the earlier `1.5.0`–`1.5.2` releases. The **already-published
+  tarballs** of those versions still contain the old files and cannot be modified; the older versions are
+  deprecated (`npm deprecate`) with a pointer to `1.5.3`.
+* Both READMEs state that the screenshots are redacted.
+* No functional change: `src/` (host and client halves) and `lib/client.js` are identical to `1.5.2`.
+
+### Verification
+
+* `verify-package.mjs` proves the peer gate still accepts `0.2.0-rc.2` and `0.2.1-rc.2` and still rejects
+  `0.3.0-rc.1`; host/client/package/profile suites pass unchanged.
+* The redacted images were inspected at full size: no session id, workspace name, query or transcript text
+  remains in the visible pixels.
+
 ## 1.5.2
 
 Fix: DSH `0.2.1-rc.2` rejected the published `1.5.1` although the plugin code was unaffected.

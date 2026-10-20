@@ -73,12 +73,14 @@ click on an archived session row in the sidebar.
 
 <img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="Archived content search: match count, outlined first hit, highlighted snippet" width="1104">
 
+> Real session names, workspaces and conversation content are masked in these screenshots.
+
 ## Install
 
 ### Standard DSH command
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.3
 ```
 
 When the command finishes, save your work and restart DSH once through its normal workflow so the new
@@ -155,7 +157,7 @@ entries and leaves the official features untouched.
 Install the target npm version with the same standard DSH command. For the current version:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.3
 ```
 
 Uninstall removes only this plugin's bundle layer and never deletes sessions:
