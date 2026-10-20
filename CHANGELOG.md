@@ -1,5 +1,63 @@
 # Changelog
 
+## 1.5.2
+
+Fix: DSH `0.2.1-rc.2` rejected the published `1.5.1` although the plugin code was unaffected.
+
+### Fixed
+
+* The three `@deepseek-ai/dsh-client-*` `peerDependencies` were pinned to the exact runtime string
+  `0.2.0-rc.2`. DSH's peer gate compares every `@deepseek-ai/dsh-*` peer with
+  `semver.satisfies(runtimeVersion, range, { includePrerelease: true })`, so an exact pin is a
+  single-runtime claim: when the Desktop application updated itself from `0.2.0-rc.2` to `0.2.1-rc.2` on
+  the nightly channel, the unchanged `1.5.1` manifest started failing the gate. The plugin manager shows
+  that refusal as **异常 / Incompatible**, and a CLI boot skips the bundle
+  (`skipping profile bundle "dsh-chat-manager-wide": ...`), so none of the plugin's entries appear.
+* The three peers now declare the tested 0.2 line — `^0.2.0-rc.2` (`>= 0.2.0-rc.2 < 0.3.0-0`, with
+  prereleases participating). A patch-level runtime release inside 0.2.x no longer requires a plugin
+  release; a 0.3 runtime still fails loudly until a release verifies it.
+* The package description and both README compatibility blocks now name that claim: DSH `0.2.x`,
+  verified on `0.2.0-rc.2` and `0.2.1-rc.2`.
+* `lib/client.js` also gained the Settings layout fix described below; the peer range itself needed only
+  the manifest.
+
+### Changed — settings section layout
+
+* The **Archived sessions** page inside Settings is rendered in the settings shell's narrow content
+  column, where a fixed 340px list left the transcript pane only ~100–200px wide. The section variant no
+  longer squeezes a transcript pane beside the list at all: it renders **one full-width list**, and
+  selecting a row opens the existing `shell.overlay` **wide transcript dialog** (1120px master/detail, the
+  same surface the session "…" menu entry uses). Restore and Delete stay on each row.
+* The Settings page's two lead-in paragraphs are gone; the section is the heading, the search box and the
+  list.
+* A search typed in Settings **follows into the dialog**: the dialog opens with the same query, so its
+  list keeps the filtered results and its transcript keeps the highlighted matches instead of starting
+  from the unfiltered archive.
+* The wide dialog keeps its side-by-side layout and inline transcript; only the Settings variant drops
+  the second pane.
+* A transcript with several matches now lets you **walk the hits**: the detail head shows the match
+  position (`2/6`) with previous/next buttons, and **Enter / Shift+Enter** move the active match forward or
+  backward from inside the dialog (the search box included). The active turn gets a stronger outline and
+  is scrolled into view; the other matching turns keep the regular hit outline.
+* Clicking an archived session row **directly in the sidebar** now opens the same wide transcript dialog.
+  The official workspace row still refuses archived sessions with its "unarchive it to view" toast; a
+  capture-phase listener claims the click before it, only for archived rows (`[data-row-key^="session:"]`
+  plus the mirrored archive set), leaves the row's own buttons (pin/rename/fork/archive/the row menu)
+  untouched, and also swallows the title double-click so the rename dialog cannot race the transcript.
+
+### Verification
+
+* The real `evaluatePluginCompatibility` gate accepts this manifest for runtime `0.2.0-rc.2` and
+  `0.2.1-rc.2`, and still rejects `0.3.0-rc.1`.
+* The 0.2.1 runtime surface this plugin uses was checked unchanged: `registration` / owner props /
+  standard props for `sidebar.workspaces.session.menu.item` (the shipped rows now include `session-id`
+  at 450; this plugin keeps 500/510), `settings.section` (the shipped `agent-presets` section sits at
+  order 20; this plugin keeps 25) and `shell.overlay`; the `workspaces` client service
+  (`unarchiveSession`); `webServer.register`; `workspaceRegistry.unarchiveSession` and its
+  `archivedSessionIds` getter; `sessionQuery.readSurface` / `filterEvents` / `searchSessions`;
+  `agents.create|resume|enter|get` and `sessions.enter`; and the JSONL `sessionPersistence` handle API.
+* Host, client, and package suites pass; the profile suite still validates the installed `web` profile.
+
 ## 1.5.1
 
 Fix: every archived-session route was unreachable in the **Desktop application**.

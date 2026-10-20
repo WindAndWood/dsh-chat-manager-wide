@@ -32,17 +32,22 @@ artifact (`npm run build`), so the two are always in sync.
    ```sh
    npm view dsh-chat-manager-wide versions --registry https://registry.npmjs.org
    ```
-   `1.4.0` is the only published version so far; `1.4.1` was prepared and then abandoned in favour of
-   this route C release, so do not publish `1.4.1`.
+   Published so far: `1.4.0`, `1.5.0`, and `1.5.1`. `1.4.1` was prepared and then abandoned in favour
+   of the route C release, so do not publish `1.4.1`.
 5. **Put it in git.** The repository already exists and is initialized; publish from a clean tree:
    ```sh
    git status                    # must be clean
    git remote -v                 # origin -> WindAndWood/dsh-chat-manager-wide
-   git tag -a v1.5.1 -m "dsh-chat-manager-wide 1.5.1"
+   git tag -a v1.5.2 -m "dsh-chat-manager-wide 1.5.2"
    git push origin main --follow-tags
    ```
    `.gitattributes` pins `* text=auto eol=lf`, so a checkout/rollback keeps `lib/client.js` byte-exact
    (verified with a real worktree rollback in the 1.4.x line).
+6. **Compatibility claim.** `peerDependencies` declares the tested DSH 0.2 line (`^0.2.0-rc.2` on the
+   three `@deepseek-ai/dsh-client-*` packages), not one exact runtime string: `verify-package.mjs`
+   proves the real gate accepts `0.2.0-rc.2` and `0.2.1-rc.2` and still rejects `0.3.0-rc.1`. Never
+   widen the range without re-checking the runtime surface used by `src/` and `src/client/factory.js`
+   against that DSH version.
 
 **2FA is mandatory for the write.** An account with two-factor authentication that logs in through the
 browser flow (`Logged in on https://registry.npmjs.org/`) can still be refused at publish time:
@@ -94,15 +99,15 @@ node -e "const s=require('fs').readFileSync('lib/client.js','utf8');console.log(
 ## 2. Dry run, then publish
 
 ```sh
-npm pack                    # -> dsh-chat-manager-wide-1.5.1.tgz
-tar -tzf dsh-chat-manager-wide-1.5.1.tgz    # inspect the published file list (21 files)
-npm publish                 # unscoped name; 1.5.1 is a normal release, so no --tag is needed
+npm pack                    # -> dsh-chat-manager-wide-1.5.2.tgz
+tar -tzf dsh-chat-manager-wide-1.5.2.tgz    # inspect the published file list (21 files)
+npm publish                 # unscoped name; 1.5.2 is a normal release, so no --tag is needed
 ```
 
-`1.5.1` carries no prerelease segment, so npm publishes it to `latest` and a bare
+`1.5.2` carries no prerelease segment, so npm publishes it to `latest` and a bare
 `dsh plugin --profile web add dsh-chat-manager-wide` resolves to it.
 
-When you later iterate with a prerelease version (for example `1.5.1-next.1`), a bare `npm publish`
+When you later iterate with a prerelease version (for example `1.5.2-next.1`), a bare `npm publish`
 fails with "You must specify a tag using --tag when publishing a prerelease version". Use
 `npm publish --tag next` for a channel, or `--tag latest` when a bare install should resolve to it.
 Note that `--tag next` leaves the package without a `latest` tag, so version-less installs fail until
@@ -123,10 +128,10 @@ routes, so installing them side by side gives you duplicate route registrations.
 dsh plugin --profile web remove dsh-chat-manager
 
 # from the registry:
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
 
 # or from the tarball, to test before publishing (absolute path or ./relative works)
-dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.1.tgz
+dsh plugin --profile web add .\dsh-chat-manager-wide-1.5.2.tgz
 ```
 
 Then **restart DSH** — the host half (`src/`) is loaded at boot, so the archive-detail route does not

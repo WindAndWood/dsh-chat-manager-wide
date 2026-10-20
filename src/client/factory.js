@@ -72,10 +72,15 @@ const IDLE_DETAIL = {
 const ARCHIVE_CSS = [
   '.dcmArchiveDialog.dcmArchiveDialog{width:min(1120px,100%);max-width:min(1120px,100%)}',
   '.dcmArchiveLayout{display:flex;align-items:stretch;gap:12px;height:min(56vh,620px);min-height:240px;margin-top:12px}',
+  // The Settings section renders one full-width list and reads a transcript
+  // through the wide shell.overlay dialog, so no transcript pane is squeezed
+  // into the narrow settings content column. The dialog variant keeps the
+  // side-by-side master/detail layout.
   '.dcmArchiveSection{display:flex;flex-direction:column;gap:10px;min-width:0;max-width:1100px}',
-  '.dcmArchiveSection .dcmArchiveLayout{height:min(62vh,640px)}',
+  '.dcmArchiveSection .dcmArchiveLayout{height:auto;min-height:0}',
+  '.dcmArchiveLayout-section{flex-direction:column}',
+  '.dcmArchiveLayout-section .dcmArchiveListPane{width:auto;min-width:0;height:min(56vh,560px)}',
   '.dcmArchiveHeading{margin:0;color:var(--dsw-alias-label-primary);font-size:18px;font-weight:600}',
-  '.dcmArchiveIntro{margin:0;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px}',
   '.dcmArchiveListPane{display:flex;flex-direction:column;gap:8px;width:340px;min-width:240px;flex:none;min-height:0}',
   '.dcmArchiveList{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;padding-right:4px}',
   '.dcmArchiveRow{cursor:pointer;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;background:transparent}',
@@ -100,6 +105,8 @@ const ARCHIVE_CSS = [
   '.dcmArchiveTurn-synthetic .dcmArchiveTurnBody{background:var(--dsw-alias-bg-layer-2);border-style:dashed}',
   '.dcmArchiveTurn-synthetic .dcmArchiveRoleChip{color:var(--dsw-alias-label-secondary)}',
   '.dcmArchiveTurnHit{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}',
+  '.dcmArchiveTurnCurrent{outline-width:3px;background:var(--dsw-alias-bg-layer-1)}',
+  '.dcmArchiveMatchNav{display:flex;align-items:center;gap:6px}',
   '.dcmArchiveRole{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary);font-size:11px}',
   '.dcmArchiveRoleChip{font-weight:500}',
   '.dcmArchiveTurn-user .dcmArchiveRoleChip{color:var(--dsw-alias-brand-primary)}',
@@ -169,19 +176,67 @@ const useStoreValue = store => {
 
 /** Pending permanent-deletion target: `{ sessionId, title }` or null. */
 const deleteTargetStore = createStore(null)
-/** Wide transcript dialog: `{ open, sessionId, title }`. */
-const archiveDialogStore = createStore({ open: false, sessionId: null, title: '' })
+/** Wide transcript dialog: `{ open, sessionId, title, query }`. */
+const archiveDialogStore = createStore({ open: false, sessionId: null, title: '', query: '' })
 /** Last successful deletion, so an open transcript pane can drop the row. */
 const deletedSessionStore = createStore({ id: null, seq: 0 })
 
-const openArchiveDialog = (sessionId, title) => {
+const openArchiveDialog = (sessionId, title, query) => {
   archiveDialogStore.set({
     open: true,
     sessionId: typeof sessionId === 'string' && sessionId.length > 0 ? sessionId : null,
     title: typeof title === 'string' ? title : '',
+    query: typeof query === 'string' ? query : '',
   })
 }
-const closeArchiveDialog = () => { archiveDialogStore.set({ open: false, sessionId: null, title: '' }) }
+const closeArchiveDialog = () => { archiveDialogStore.set({ open: false, sessionId: null, title: '', query: '' }) }
+
+/** Latest archived ids + titles, mirrored by the always-mounted overlays so the
+ * capture-phase row interceptor can read them without a React render tree. */
+const liveArchivedSessionIds = new Set()
+const liveSessionTitles = new Map()
+
+/** Session id of the sidebar row a pointer event started in, or null. */
+const rowSessionIdOf = target => {
+  if (target === null || typeof target !== 'object' || typeof target.closest !== 'function') return null
+  const row = target.closest('[data-row-key^="session:"]')
+  if (row === null || typeof row.getAttribute !== 'function') return null
+  const key = row.getAttribute('data-row-key')
+  return typeof key === 'string' && key.startsWith('session:') ? key.slice('session:'.length) : null
+}
+
+/**
+ * Open the wide transcript dialog when an archived session row in the sidebar
+ * is clicked directly. The official workspace row refuses that click with a
+ * toast ("unarchive it to view"); a capture-phase listener claims it first.
+ * Only archived rows are claimed and the row's own action buttons keep their
+ * own handlers, so pin/rename/fork/archive/the row menu are untouched.
+ */
+const installArchivedRowInterceptor = () => {
+  if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return undefined
+  const intercept = event => {
+    if (event === null || typeof event !== 'object' || event.defaultPrevented === true) return
+    if (event.button !== undefined && event.button !== 0) return
+    if (event.metaKey === true || event.ctrlKey === true || event.shiftKey === true || event.altKey === true) return
+    const target = event.target
+    if (target === null || typeof target !== 'object' || typeof target.closest !== 'function') return
+    // The row's own buttons (menu trigger, hover actions, unarchive) keep working.
+    if (target.closest('button, a, [role="menu"], [role="menuitem"]') !== null) return
+    const sessionId = rowSessionIdOf(target)
+    if (sessionId === null || !liveArchivedSessionIds.has(sessionId)) return
+    event.preventDefault()
+    event.stopPropagation()
+    openArchiveDialog(sessionId, liveSessionTitles.get(sessionId) ?? '')
+  }
+  document.addEventListener('click', intercept, true)
+  // A double-click would otherwise reach the row title's rename handler with
+  // the archive dialog already open.
+  document.addEventListener('dblclick', intercept, true)
+  return () => {
+    document.removeEventListener('click', intercept, true)
+    document.removeEventListener('dblclick', intercept, true)
+  }
+}
 
 const requestSessionDelete = (sessionId, title) => {
   deleteTargetStore.set({ sessionId, title: typeof title === 'string' ? title : '' })
@@ -291,7 +346,6 @@ const normalizeDetailItem = item => {
 const zh = {
   nav: '已归档会话',
   heading: '已归档会话',
-  intro: '归档会话无法在侧栏中打开；在这里可以阅读它们的完整正文，也可以恢复或永久删除。',
   dialogTitle: '归档会话',
   dialogDescription: '共 {n} 个归档会话。可按名称、工作区或聊天内容搜索。',
   searchPlaceholder: '搜索归档名称、工作区或聊天内容…',
@@ -333,6 +387,9 @@ const zh = {
   fileAttachment: '文件',
   bytesUnit: '字节',
   matchCount: '{n} 处匹配',
+  matchPosition: '{current}/{total}',
+  matchPrev: '上一处匹配',
+  matchNext: '下一处匹配',
   jumpToMatch: '跳到首处匹配',
   copyCode: '复制代码',
   copiedCode: '已复制',
@@ -353,7 +410,6 @@ const zh = {
 const en = {
   nav: 'Archived sessions',
   heading: 'Archived sessions',
-  intro: 'Archived sessions cannot be opened from the sidebar. Read their full transcript here, or restore and permanently delete them.',
   dialogTitle: 'Archived sessions',
   dialogDescription: '{n} archived sessions. Search by name, workspace, or conversation content.',
   searchPlaceholder: 'Search archived names, workspaces, or conversation content…',
@@ -395,6 +451,9 @@ const en = {
   fileAttachment: 'File',
   bytesUnit: 'bytes',
   matchCount: '{n} matches',
+  matchPosition: '{current}/{total}',
+  matchPrev: 'Previous match',
+  matchNext: 'Next match',
   jumpToMatch: 'Jump to first match',
   copyCode: 'Copy code',
   copiedCode: 'Copied',
@@ -418,6 +477,7 @@ const inject = ['slots', 'locale']
 function apply(ctx) {
   const boundT = ctx.locale.bind(NS)
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-chat-manager-wide: locale dictionaries')
+  ctx.effect(() => installArchivedRowInterceptor(), 'dsh-chat-manager-wide: archived-row click interceptor')
 
   const h = React.createElement
 
@@ -444,7 +504,10 @@ function apply(ctx) {
       EMPTY_MAP,
     )
 
-    const [query, setQuery] = React.useState('')
+    // The Settings list hands its active search to the dialog so the popup
+    // continues the same result set instead of starting from scratch.
+    const initialQuery = typeof props.initialQuery === 'string' ? props.initialQuery : ''
+    const [query, setQuery] = React.useState(initialQuery)
     const [remote, setRemote] = React.useState({ query: '', status: 'idle', items: EMPTY_LIST, hasMore: false })
     const [detail, setDetail] = React.useState(IDLE_DETAIL)
     const [copyState, setCopyState] = React.useState('idle')
@@ -598,14 +661,31 @@ function apply(ctx) {
         .map(item => item.seq)
     }, [detail.items, searchNeedle])
 
+    // Navigate the matches: the head buttons and Enter (Shift+Enter backwards)
+    // move the active turn and scroll it into view.
+    const [matchCursor, setMatchCursor] = React.useState(0)
+    const activeMatchIndex = matchedSeqs.length === 0 ? -1 : Math.min(matchCursor, matchedSeqs.length - 1)
+    const activeMatchSeq = activeMatchIndex === -1 ? null : matchedSeqs[activeMatchIndex]
+    const stepMatch = delta => {
+      if (matchedSeqs.length === 0) return
+      setMatchCursor(current => {
+        const total = matchedSeqs.length
+        const from = Number.isInteger(current) ? current : 0
+        const next = (from + delta) % total
+        return next < 0 ? next + total : next
+      })
+    }
+    React.useEffect(() => {
+      setMatchCursor(0)
+    }, [searchNeedle, detail.sessionId])
+
     const transcriptRef = React.useRef(null)
-    const firstMatchSeq = matchedSeqs.length > 0 ? matchedSeqs[0] : null
     React.useEffect(() => {
       const container = transcriptRef.current
-      if (firstMatchSeq === null || container === null || typeof container.querySelector !== 'function') return
-      const node = container.querySelector(`[data-seq="${firstMatchSeq}"]`)
+      if (activeMatchSeq === null || container === null || typeof container.querySelector !== 'function') return
+      const node = container.querySelector(`[data-seq="${activeMatchSeq}"]`)
       if (node !== null && typeof node.scrollIntoView === 'function') node.scrollIntoView({ block: 'center' })
-    }, [firstMatchSeq, detail.sessionId])
+    }, [activeMatchSeq, detail.sessionId])
 
     const blockCopyText = block => {
       if (block.kind === 'text' || block.kind === 'injected' || block.kind === 'reasoning') return block.text
@@ -806,7 +886,9 @@ function apply(ctx) {
             'dcmArchiveTurn',
             `dcmArchiveTurn-${lane}`,
             matchedSeqs.includes(item.seq) ? 'dcmArchiveTurnHit' : null,
+            item.seq === activeMatchSeq ? 'dcmArchiveTurnCurrent' : null,
           ].filter(Boolean).join(' '),
+          'data-match-active': item.seq === activeMatchSeq ? 'true' : undefined,
         }, [
           h('div', { key: 'role', className: 'dcmArchiveRole' }, [
             h('span', { key: 'chip', className: 'dcmArchiveRoleChip' }, synthetic
@@ -850,80 +932,127 @@ function apply(ctx) {
       },
     })
 
-    const layout = h('div', { className: 'dcmArchiveLayout' }, [
-      h('div', { className: 'dcmArchiveListPane', key: 'list' }, [
-        h('div', { className: 'dcmArchiveList', key: 'rows' }, rows.length === 0
-          ? h('div', { className: 'dcmArchivePlaceholder' }, normalizedQuery === '' ? t('empty') : t('noMatches'))
-          : rows.map(row => h('div', {
-            key: row.id,
-            className: detail.sessionId === row.id ? 'dcmArchiveRow dcmArchiveRowActive' : 'dcmArchiveRow',
-            role: 'button',
-            tabIndex: 0,
-            'aria-pressed': detail.sessionId === row.id,
-            onClick: () => loadDetail(row.id, row.title),
-            onKeyDown: event => {
-              if (event.target !== event.currentTarget) return
-              if (event.key !== 'Enter' && event.key !== ' ') return
-              event.preventDefault()
-              loadDetail(row.id, row.title)
-            },
-          }, [
-            h('div', { className: 'dcmArchiveRowTitle', key: 'title' }, highlight(row.title)),
-            h('div', { className: 'dcmArchiveRowMeta', key: 'meta' }, row.workspace),
-            snippets.has(row.id)
-              ? h('div', { className: 'dcmArchiveRowSnippet', key: 'snippet' }, highlight(snippets.get(row.id)))
-              : null,
-            h('div', { className: 'dcmArchiveRowActions', key: 'actions' }, [
-              h(primitives.Button, {
-                key: 'restore',
-                variant: 'outline',
-                className: 'dcmArchiveRowAction',
-                disabled: busyId !== null,
-                onClick: event => {
-                  event.stopPropagation()
-                  restoreRow(row.id)
-                },
-              }, busyId === row.id ? t('restoring') : t('restore')),
-              h(primitives.Button, {
-                key: 'delete',
-                variant: 'outline',
-                className: 'dcmArchiveRowAction dcmArchiveRowActionDanger',
-                disabled: busyId !== null,
-                onClick: event => {
-                  event.stopPropagation()
-                  requestSessionDelete(row.id, row.title)
-                },
-              }, t('deleteRow')),
-            ]),
-          ]))),
-        remote.hasMore ? h('div', { className: 'dcmArchiveNotice', key: 'more' }, t('hasMore')) : null,
-        actionError !== null
-          ? h('div', { className: 'dcmArchiveError', key: 'error', role: 'alert' }, actionError)
-          : null,
-      ]),
-      h('div', { className: 'dcmArchiveDetailPane', key: 'detail' }, [
-        h('div', { className: 'dcmArchiveDetailHead', key: 'head' }, [
-          h('div', { className: 'dcmArchiveDetailTitle', key: 'title' }, detail.sessionId === null ? t('detailTitle') : detail.title),
-          h('div', { className: 'dcmArchiveDetailMeta', key: 'meta' }, [
-            h('span', { key: 'count' }, detail.status === 'ready' ? t('detailMeta', { n: detail.total }) : ''),
-            detail.status === 'ready' && matchedSeqs.length > 0
-              ? h('span', { key: 'matches', className: 'dcmArchiveNotice' }, t('matchCount', { n: matchedSeqs.length }))
-              : null,
-            detail.status === 'ready' && clipboardAvailable
-              ? h(primitives.Button, {
-                key: 'copy',
-                variant: 'outline',
-                className: 'dcmArchiveRowAction',
-                onClick: copyDetail,
-              }, copyState === 'copied' ? t('copied') : t('copy'))
-              : null,
+    /** In Settings the list is the whole pane: a row opens the wide dialog. */
+    const openRow = row => {
+      if (variant === 'section') {
+        openArchiveDialog(row.id, row.title, normalizedQuery)
+        return
+      }
+      loadDetail(row.id, row.title)
+    }
+
+    const listPane = h('div', { className: 'dcmArchiveListPane', key: 'list' }, [
+      h('div', { className: 'dcmArchiveList', key: 'rows' }, rows.length === 0
+        ? h('div', { className: 'dcmArchivePlaceholder' }, normalizedQuery === '' ? t('empty') : t('noMatches'))
+        : rows.map(row => h('div', {
+          key: row.id,
+          className: detail.sessionId === row.id ? 'dcmArchiveRow dcmArchiveRowActive' : 'dcmArchiveRow',
+          role: 'button',
+          tabIndex: 0,
+          'aria-pressed': detail.sessionId === row.id,
+          onClick: () => openRow(row),
+          onKeyDown: event => {
+            if (event.target !== event.currentTarget) return
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            openRow(row)
+          },
+        }, [
+          h('div', { className: 'dcmArchiveRowTitle', key: 'title' }, highlight(row.title)),
+          h('div', { className: 'dcmArchiveRowMeta', key: 'meta' }, row.workspace),
+          snippets.has(row.id)
+            ? h('div', { className: 'dcmArchiveRowSnippet', key: 'snippet' }, highlight(snippets.get(row.id)))
+            : null,
+          h('div', { className: 'dcmArchiveRowActions', key: 'actions' }, [
+            h(primitives.Button, {
+              key: 'restore',
+              variant: 'outline',
+              className: 'dcmArchiveRowAction',
+              disabled: busyId !== null,
+              onClick: event => {
+                event.stopPropagation()
+                restoreRow(row.id)
+              },
+            }, busyId === row.id ? t('restoring') : t('restore')),
+            h(primitives.Button, {
+              key: 'delete',
+              variant: 'outline',
+              className: 'dcmArchiveRowAction dcmArchiveRowActionDanger',
+              disabled: busyId !== null,
+              onClick: event => {
+                event.stopPropagation()
+                requestSessionDelete(row.id, row.title)
+              },
+            }, t('deleteRow')),
           ]),
-        ]),
-        h('div', { className: 'dcmArchiveTranscript', key: 'transcript', ref: transcriptRef }, renderTranscript()),
-      ]),
+        ]))),
+      remote.hasMore ? h('div', { className: 'dcmArchiveNotice', key: 'more' }, t('hasMore')) : null,
+      actionError !== null
+        ? h('div', { className: 'dcmArchiveError', key: 'error', role: 'alert' }, actionError)
+        : null,
     ])
 
-    return h('div', { className: variant === 'section' ? 'dcmArchiveSection' : 'dcmArchiveSectionBody' }, [
+    // The Settings variant has no second pane; the wide dialog renders the
+    // transcript. Only the dialog variant keeps the inline master/detail.
+    const detailPane = variant === 'section' ? null : h('div', { className: 'dcmArchiveDetailPane', key: 'detail' }, [
+      h('div', { className: 'dcmArchiveDetailHead', key: 'head' }, [
+        h('div', { className: 'dcmArchiveDetailTitle', key: 'title' }, detail.sessionId === null ? t('detailTitle') : detail.title),
+        h('div', { className: 'dcmArchiveDetailMeta', key: 'meta' }, [
+          h('span', { key: 'count' }, detail.status === 'ready' ? t('detailMeta', { n: detail.total }) : ''),
+          detail.status === 'ready' && matchedSeqs.length > 0
+            ? h('span', { key: 'matches', className: 'dcmArchiveMatchNav' }, [
+              h('span', { key: 'count', className: 'dcmArchiveNotice' }, t('matchCount', { n: matchedSeqs.length })),
+              h('span', { key: 'position', className: 'dcmArchiveNotice' }, t('matchPosition', { current: activeMatchIndex + 1, total: matchedSeqs.length })),
+              h(primitives.Button, {
+                key: 'prev',
+                variant: 'outline',
+                className: 'dcmArchiveRowAction',
+                'aria-label': t('matchPrev'),
+                title: t('matchPrev'),
+                onClick: () => stepMatch(-1),
+              }, '↑'),
+              h(primitives.Button, {
+                key: 'next',
+                variant: 'outline',
+                className: 'dcmArchiveRowAction',
+                'aria-label': t('matchNext'),
+                title: t('matchNext'),
+                onClick: () => stepMatch(1),
+              }, '↓'),
+            ])
+            : null,
+          detail.status === 'ready' && clipboardAvailable
+            ? h(primitives.Button, {
+              key: 'copy',
+              variant: 'outline',
+              className: 'dcmArchiveRowAction',
+              onClick: copyDetail,
+            }, copyState === 'copied' ? t('copied') : t('copy'))
+            : null,
+        ]),
+      ]),
+      h('div', { className: 'dcmArchiveTranscript', key: 'transcript', ref: transcriptRef }, renderTranscript()),
+    ])
+
+    const layout = h('div', {
+      className: variant === 'section' ? 'dcmArchiveLayout dcmArchiveLayout-section' : 'dcmArchiveLayout',
+    }, variant === 'section' ? [listPane] : [listPane, detailPane])
+
+    const rootKeyDown = event => {
+      if (event === null || typeof event !== 'object') return
+      if (event.key !== 'Enter' || matchedSeqs.length === 0) return
+      if (event.nativeEvent !== undefined && event.nativeEvent !== null && event.nativeEvent.isComposing === true) return
+      const target = event.target
+      if (target !== null && typeof target === 'object' && typeof target.closest === 'function'
+        && target.closest('button, a, [role="menuitem"]') !== null) return
+      event.preventDefault()
+      stepMatch(event.shiftKey === true ? -1 : 1)
+    }
+
+    return h('div', {
+      className: variant === 'section' ? 'dcmArchiveSection' : 'dcmArchiveSectionBody',
+      onKeyDown: rootKeyDown,
+    }, [
       searchBox,
       remote.status === 'loading'
         ? h('div', { className: 'dcmArchiveNotice', key: 'searching', role: 'status' }, t('searching'))
@@ -943,7 +1072,6 @@ function apply(ctx) {
     const t = props.t ?? boundT
     return h('div', { className: 'dcmArchiveSection' }, [
       h('h2', { className: 'dcmArchiveHeading', key: 'heading' }, t('heading')),
-      h('p', { className: 'dcmArchiveIntro', key: 'intro' }, t('intro')),
       h(ArchiveBrowser, {
         key: 'browser',
         t,
@@ -962,11 +1090,28 @@ function apply(ctx) {
     const t = props.t ?? boundT
     const dialog = useStoreValue(archiveDialogStore)
     // All hooks run before the early return: `open` flips on a mounted entry.
-    const archivedCount = selectWith(
+    // The archived set and titles are also mirrored for the row interceptor.
+    const archivedIds = selectWith(
       props.useWorkspaces,
-      state => (state === undefined ? undefined : (state.archivedSessionIds ?? EMPTY_LIST).length),
-      0,
+      state => (state === undefined ? undefined : state.archivedSessionIds),
+      EMPTY_LIST,
     )
+    const sessionSummaries = selectWith(
+      props.useSessions,
+      state => (state === undefined ? undefined : state.byId),
+      EMPTY_MAP,
+    )
+    React.useEffect(() => {
+      liveArchivedSessionIds.clear()
+      for (const id of archivedIds) liveArchivedSessionIds.add(id)
+    }, [archivedIds])
+    React.useEffect(() => {
+      liveSessionTitles.clear()
+      for (const [id, summary] of Object.entries(sessionSummaries)) {
+        if (typeof summary?.displayTitle === 'string') liveSessionTitles.set(id, summary.displayTitle)
+      }
+    }, [sessionSummaries])
+    const archivedCount = archivedIds.length
     if (!dialog.open) return null
     return h(primitives.Modal, {
       open: true,
@@ -981,6 +1126,7 @@ function apply(ctx) {
       variant: 'dialog',
       initialSessionId: dialog.sessionId,
       initialTitle: dialog.title,
+      initialQuery: dialog.query,
       useSessions: props.useSessions,
       useWorkspaces: props.useWorkspaces,
     }))

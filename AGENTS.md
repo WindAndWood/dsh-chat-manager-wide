@@ -1,5 +1,5 @@
 > **Fork note.** This is the `dsh-chat-manager-wide` fork. Every command and package spec in this
-> document already points at `dsh-chat-manager-wide@1.5.1`. Do not install it next to the
+> document already points at `dsh-chat-manager-wide@1.5.2`. Do not install it next to the
 > original `dsh-chat-manager` in one profile.
 
 # Agent installation guide
@@ -10,7 +10,7 @@ or remove `dsh-chat-manager-wide` in a selected DeepSeek Harness profile.
 ## Safety and responsibility boundary
 
 - Confirm the target DSH installation and profile. Use `web` only when it is the user's target.
-- Use the fixed `dsh-chat-manager-wide@1.5.1` package below; never substitute a moving branch or an
+- Use the fixed `dsh-chat-manager-wide@1.5.2` package below; never substitute a moving branch or an
   unreviewed source.
 - Do not print session contents, full profile files, transcript paths, credentials, or other private data.
 - Do not start, stop, or restart DSH without explicit permission.
@@ -30,16 +30,24 @@ requirements. A cancelled confirmation is the safe default and must not send a d
 The `dsh-chat-manager-wide` package is a standard DSH bundle (a fork of `dsh-chat-manager` 1.3.4) with a `dsh.bundle` profile patch. Its exact package spec is:
 
 ```text
-dsh-chat-manager-wide@1.5.1
+dsh-chat-manager-wide@1.5.2
 ```
 
 Since 1.5.0 the bundle no longer disables or replaces the official workspace row. Its client half is a small
 slot plugin (`lib/client.js`) that adds three additive entries — the `settings.section` with id
 `archived-sessions`, two `sidebar.workspaces.session.menu.item` rows, and two `shell.overlay` dialogs — while
-the official archiving UI keeps working. Removing `dsh-chat-manager-wide` removes only those entries. Do not
+the official archiving UI keeps working. Clicking an archived session row **directly in the sidebar** opens
+the same wide transcript dialog (a capture-phase listener claims the click for archived rows only and leaves
+the row's own buttons alone), so users no longer have to go through the "…" menu. Removing
+`dsh-chat-manager-wide` removes only those entries. Do not
 install the tarball under `@deepseek-ai/dsh-client-ui-workspace`; that old aliasing approach is not the
 contract. The product is shown to users as **DSH Chat Manager Wide**, an unofficial fork of `dsh-chat-manager`
 by WSL043; it is not affiliated with or endorsed by DeepSeek or by the upstream author.
+
+The declared DSH compatibility is the tested 0.2 line (`^0.2.0-rc.2` on the three
+`@deepseek-ai/dsh-client-*` peers), so a patch-level runtime release inside 0.2.x does not reject this
+package; a 0.3 runtime still does until a release verifies it. `1.5.2` is the first release with a range
+instead of an exact runtime pin.
 
 ## Detect the target DSH
 
@@ -63,7 +71,7 @@ record the selected profile's relevant metadata before invoking it, without prin
 With an existing `dsh` command, run exactly:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
 ```
 
 Use the same `add` command to update or repair. The DSH CLI owns target selection, dependency resolution,
@@ -81,7 +89,7 @@ dsh plugin --profile web list dsh-chat-manager-wide --depth 0
 ```
 
 1. The `dsh-chat-manager-wide` bundle appears exactly once in the requested profile.
-2. Its direct package spec is the fixed `dsh-chat-manager-wide@1.5.1` npm version above.
+2. Its direct package spec is the fixed `dsh-chat-manager-wide@1.5.2` npm version above.
 3. The profile contains the bundle patch, and the official `@deepseek-ai/dsh-web-app` bundle is still
    composed (this plugin must not skip or shadow it).
 4. No unrelated dependency, profile patch, or session data was changed by the operation.
@@ -97,7 +105,9 @@ With permission to restart DSH, verify the live UI in dark mode:
    system-injected runtime context appear as collapsed cards, and tool failures are marked red.
 4. Restoring a disposable archived session returns it to its original workspace position without reloading the page.
 5. An archived session's native actions menu contains **View archived transcript** and the red
-   **Delete session** action, in addition to the official **Archive session** entry.
+   **Delete session** action, in addition to the official **Archive session** entry. Clicking the archived
+   row itself in the sidebar opens the same wide transcript dialog directly (no menu needed, and no
+   "unarchive first" toast).
 6. Opening Delete shows the target session name and a second confirmation.
 7. Selecting **Cancel** closes the dialog, sends no delete request, and leaves the session visible.
 8. A destructive check is allowed only with a disposable test session explicitly selected by the user.

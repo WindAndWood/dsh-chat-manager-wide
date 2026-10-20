@@ -9,8 +9,9 @@
 
 > Version 1.5.0: the plugin no longer replaces the official workspace client. It only adds to reserved
 > official slots — a **Archived sessions** section in Settings, **View archived transcript** and
-> **Delete session** rows in a session's "…" menu, and one confirmation dialog. Archiving, unarchiving,
-> the archived-row filter, and archived-content search stay with the official implementation.
+> **Delete session** rows in a session's "…" menu, and one confirmation dialog. **Clicking an archived
+> session row in the sidebar** opens the same wide dialog directly, without the "unarchive first" toast.
+> Archiving, unarchiving, the archived-row filter, and archived-content search stay with the official implementation.
 
 > [!NOTE]
 > This is an actively maintained, independently removable DSH plugin. It adds archive browsing, conversation-content search, restore, and safe permanent deletion. If this session workflow is not for you, uninstalling the plugin leaves existing sessions untouched.
@@ -56,11 +57,13 @@ contexts, not words you typed, so they are labelled **system-injected** instead 
 such as `AGENTS.md` **render as Markdown**, next to the list of files involved and whether each was added,
 updated or removed, with the verbatim injected text one click away.
 Search counts its matches, scrolls to and outlines the first matching turn, highlights plain-text matches
-in both panes, and a date line separates days. The same surface has two entry points: the **Archived
-sessions** section in Settings, and **View archived transcript** in an archived row's "…" menu.
+in both panes, and a date line separates days. The same surface has three entry points: the **Archived
+sessions** section in Settings, **View archived transcript** in an archived row's "…" menu, and a direct
+click on an archived session row in the sidebar.
 
-**Two entry points.** The **Archived sessions** section in Settings, and **View archived transcript** /
-**Delete session** in an archived row's "…" menu:
+**Three entry points.** The **Archived sessions** section in Settings, **View archived transcript** /
+**Delete session** in an archived row's "…" menu, or a direct click on an archived session row itself
+(which opens the wide dialog instead of the "unarchive first" toast):
 
 <img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/menu-entries.png" alt="Session row menu: View archived transcript / Delete session" width="393">
 
@@ -75,7 +78,7 @@ sessions** section in Settings, and **View archived transcript** in an archived 
 ### Standard DSH command
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
 ```
 
 When the command finishes, save your work and restart DSH once through its normal workflow so the new
@@ -91,7 +94,7 @@ npm; do not substitute an online document for it.
 
 ### Manage archives
 
-1. Open **Settings → Archived sessions** (or **View archived transcript** in an archived row's "…" menu).
+1. Open **Settings → Archived sessions** (or **View archived transcript** in an archived row's "…" menu, or click the archived row itself in the sidebar).
 2. Browse every archive or search by session name, workspace, and user/assistant conversation content.
 3. Select **Restore** to return a session to its original workspace position. To remove it completely,
    start the permanent-delete confirmation from the same list.
@@ -137,8 +140,9 @@ provided under the [MIT License](LICENSE), without warranty.
 ## Compatibility
 
 <!-- dsh-compatibility -->
-Requires DeepSeek Harness `0.2.0-rc.2` — declared exactly as the upstream runtime version in
-`peerDependencies`.
+Requires DeepSeek Harness `0.2.x` (verified on `0.2.0-rc.2` and `0.2.1-rc.2`; the three
+`@deepseek-ai/dsh-client-*` peers declare `^0.2.0-rc.2`, so a patch-level runtime release on the 0.2
+line no longer needs a plugin release).
 <!-- /dsh-compatibility -->
 
 Archive browsing, restore, and content search use DSH's workspace registry and session-query capabilities.
@@ -151,7 +155,7 @@ entries and leaves the official features untouched.
 Install the target npm version with the same standard DSH command. For the current version:
 
 ```sh
-dsh plugin --profile web add dsh-chat-manager-wide@1.5.1
+dsh plugin --profile web add dsh-chat-manager-wide@1.5.2
 ```
 
 Uninstall removes only this plugin's bundle layer and never deletes sessions:
