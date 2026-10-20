@@ -50,6 +50,7 @@ DSH 自动读取的文档（`AGENTS.md`、技能内容、运行时上下文等�
 所以它们不再伪装成「我」说的话，而是标注为 **系统注入**：注入的 `AGENTS.md` 等文档**按 Markdown 正常排版**，
 旁边列出涉及的文件与「新增 / 更新 / 移除」，原始注入文本仍可一键展开查看。
 搜索会统计命中数、自动滚到并框出第一条命中的消息，正文与左侧摘要里的命中词都会高亮；
+命中多条时，可用正文顶部的 **↑ / ↓** 或 **Enter / Shift+Enter** 逐条跳转（当前命中会加粗描边）；
 同一天的消息之间有一条日期分隔线。同一份界面有三个入口：设置里的 **已归档会话** 分节，
 已归档会话行「…」菜单里的 **查看归档正文**，以及**直接点击侧栏里的已归档会话行**。
 
@@ -62,7 +63,7 @@ DSH 自动读取的文档（`AGENTS.md`、技能内容、运行时上下文等�
 
 <img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-transcript.png" alt="归档会话：左列表 + 右正文，系统注入折叠、工具调用成卡片" width="1103">
 
-<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="归档内容检索：命中计数、框选首条命中、摘要高亮" width="1104">
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="归档内容检索：命中计数、↑/↓ 跳转、摘要高亮" width="1104">
 
 > 界面截图中的真实会话名称、工作区与对话内容均已做脱敏遮盖。
 

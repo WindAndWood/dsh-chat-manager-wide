@@ -57,7 +57,9 @@ contexts, not words you typed, so they are labelled **system-injected** instead 
 such as `AGENTS.md` **render as Markdown**, next to the list of files involved and whether each was added,
 updated or removed, with the verbatim injected text one click away.
 Search counts its matches, scrolls to and outlines the first matching turn, highlights plain-text matches
-in both panes, and a date line separates days. The same surface has three entry points: the **Archived
+in both panes, and — with several hits — lets you walk them with the **↑ / ↓** buttons in the detail head
+or **Enter / Shift+Enter** (the active hit gets a stronger outline). A date line separates days. The same
+surface has three entry points: the **Archived
 sessions** section in Settings, **View archived transcript** in an archived row's "…" menu, and a direct
 click on an archived session row in the sidebar.
 
@@ -71,7 +73,7 @@ click on an archived session row in the sidebar.
 
 <img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-transcript.png" alt="Archived sessions: list on the left, transcript on the right, folded injections and tool cards" width="1103">
 
-<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="Archived content search: match count, outlined first hit, highlighted snippet" width="1104">
+<img src="https://raw.githubusercontent.com/WindAndWood/dsh-chat-manager-wide/main/docs/assets/archive-search.png" alt="Archived content search: match count, ↑/↓ navigation, highlighted snippet" width="1104">
 
 > Real session names, workspaces and conversation content are masked in these screenshots.
 
